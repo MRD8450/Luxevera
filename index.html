@@ -209,6 +209,14 @@
             color: #4a3f35;
         }
 
+        .loading-text {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--accent-bronze);
+            padding: 40px;
+        }
+
         footer {
             text-align: center;
             margin-top: 50px;
@@ -244,7 +252,7 @@
         </div>
 
         <main class="grid-container" id="product-grid">
-            <!-- Produkte werden dynamisch geladen -->
+            <div class="loading-text">Produkte werden geladen...</div>
         </main>
 
         <footer>
@@ -254,31 +262,9 @@
 
     <script>
         const CORRECT_PIN = "2026";
-
-        // Produktdaten (exakt wie in deinem Google Sheet gepflegt)
-        const products = [
-            {
-                name: "L'Élixir Noir",
-                price: "185,00 €",
-                description: "Sinnliches Eau de Parfum mit feinen Noten von Bourbon-Vanille, Amber und schwarzer Iris.",
-                category: "parfum",
-                image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80"
-            },
-            {
-                name: "Velvet Touch Lipstick",
-                price: "42,00 €",
-                description: "Cremiger Lippenstift für intensive Farbe und ein samtiges Finish. Mit pflegendem Jojobaöl.",
-                category: "makeup",
-                image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80"
-            },
-            {
-                name: "Aura Gold Sunglasses",
-                price: "290,00 €",
-                description: "Zeitlose Sonnenbrille mit handgefertigtem Titanrahmen in feiner Goldoptik und UV400-Schutz.",
-                category: "brillen",
-                image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80"
-            }
-        ];
+        
+        // Veröffentlichter CSV-Link von Google Sheets
+        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFEveKHZRGRXqcwTCIQtmbgTbSbW1rMWVnC8dWUew1KOWuxyIwWAPxAnD0ROwbn8x6-y2X4_FMeTOh/pub?output=csv";
 
         function checkPin() {
             const enteredPin = document.getElementById('pin-input').value;
@@ -287,7 +273,7 @@
             if (enteredPin === CORRECT_PIN) {
                 document.getElementById('pin-overlay').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
-                renderProducts();
+                loadProductsFromSheet();
             } else {
                 errorMsg.style.display = 'block';
                 document.getElementById('pin-input').value = '';
@@ -300,25 +286,64 @@
             }
         });
 
-        function renderProducts() {
+        async function loadProductsFromSheet() {
             const grid = document.getElementById('product-grid');
-            grid.innerHTML = '';
+            grid.innerHTML = '<div class="loading-text">Produkte werden aus Google Sheets geladen...</div>';
 
-            products.forEach(product => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.setAttribute('data-category', product.category);
+            try {
+                // Nutzung von AllOrigins Proxy um Browser CORS-Sperren auf GitHub Pages zu umgehen
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(SHEET_CSV_URL)}`;
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error("Fehler beim Abruf der Daten");
+                
+                const text = await response.text();
+                const lines = text.trim().split('\n');
 
-                card.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}">
-                    <div class="card-body">
-                        <h2 class="card-title">${product.name}</h2>
-                        <div class="card-price">${product.price}</div>
-                        <p class="card-description">${product.description}</p>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
+                const products = [];
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    
+                    // Regex zum korrekten Trennen von CSV mit Kommas in Anführungszeichen
+                    const r = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
+                    const clean = r.map(val => val.replace(/^"|"$/g, '').trim());
+
+                    if (clean.length >= 4 && clean[0]) {
+                        products.push({
+                            name: clean[0],
+                            price: clean[1],
+                            description: clean[2],
+                            category: (clean[3] || 'all').toLowerCase(),
+                            image: clean[4] || 'https://via.placeholder.com/600x400?text=LUXEVERA'
+                        });
+                    }
+                }
+
+                if (products.length === 0) {
+                    grid.innerHTML = '<div class="loading-text">Keine Produkte in der Google-Tabelle gefunden.</div>';
+                    return;
+                }
+
+                grid.innerHTML = ''; 
+
+                products.forEach(product => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.setAttribute('data-category', product.category);
+
+                    card.innerHTML = `
+                        <img src="${product.image}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/600x400?text=LUXEVERA'">
+                        <div class="card-body">
+                            <h2 class="card-title">${product.name}</h2>
+                            <div class="card-price">${product.price}</div>
+                            <p class="card-description">${product.description}</p>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                console.error("Fehler beim Laden:", error);
+                grid.innerHTML = '<div class="loading-text">Fehler beim Laden der Produktdaten aus Google Sheets.</div>';
+            }
         }
 
         function filterCategory(category, event) {
