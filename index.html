@@ -29,6 +29,7 @@
             padding-bottom: 50px;
         }
 
+        /* 1. Stufe PIN-Overlay (Normale Ansicht / Schutz) */
         #pin-overlay {
             position: fixed;
             top: 0;
@@ -42,6 +43,21 @@
             z-index: 9999;
         }
 
+        /* 2. Stufe PIN-Modal (Admin-Bereich) */
+        #admin-pin-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
         .pin-box {
             background: var(--card-bg);
             backdrop-filter: blur(15px);
@@ -52,6 +68,7 @@
             text-align: center;
             max-width: 380px;
             width: 90%;
+            position: relative;
         }
 
         .pin-box h2 {
@@ -97,6 +114,17 @@
 
         .pin-box button:hover {
             background-color: var(--text-dark);
+        }
+
+        .close-pin-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-dark);
         }
 
         .pin-error {
@@ -337,22 +365,37 @@
 </head>
 <body>
 
+    <!-- 1. Stufe: Normaler PIN-Schutz für die Startseite (PIN: 2026) -->
     <div id="pin-overlay">
         <div class="pin-box">
             <h2>LUXEVERA</h2>
             <p>Bitte geben Sie den PIN-Code ein</p>
-            <input type="password" id="pin-input" placeholder="••••" maxlength="6">
-            <button type="button" id="pin-submit-btn">Zugriff anfordern</button>
-            <div id="pin-error" class="pin-error">Falscher PIN-Code. Bitte versuchen Sie es erneut.</div>
+            <input type="password" id="main-pin-input" placeholder="••••" maxlength="6">
+            <button type="button" id="main-pin-btn">Zugriff anfordern</button>
+            <div id="main-pin-error" class="pin-error">Falscher PIN-Code.</div>
         </div>
     </div>
 
+    <!-- 2. Stufe: Admin-PIN-Modal für das Management (PIN: z.B. 9999) -->
+    <div id="admin-pin-modal">
+        <div class="pin-box">
+            <button class="close-pin-btn" onclick="closeAdminPinModal()">×</button>
+            <h2>Admin-Bereich</h2>
+            <p>Admin-PIN eingeben</p>
+            <input type="password" id="admin-pin-input" placeholder="••••" maxlength="6">
+            <button type="button" id="admin-pin-btn">Bestätigen</button>
+            <div id="admin-pin-error" class="pin-error">Falscher Admin-PIN.</div>
+        </div>
+    </div>
+
+    <!-- Hauptinhalt (Erst nach Eingabe von 2026 sichtbar) -->
     <div id="main-content">
         <header>
-            <button class="admin-toggle-btn" onclick="toggleAdminPanel()">⚙️ Management</button>
+            <button class="admin-toggle-btn" onclick="requestAdminAccess()">⚙️ Management</button>
             <img src="logo.png" alt="LUXEVERA Logo" class="logo-img">
         </header>
 
+        <!-- Admin Panel (Erst nach Admin-PIN sichtbar) -->
         <div id="admin-panel">
             <h3>Produkt-Management</h3>
             <form id="product-form" onsubmit="addProduct(event)">
@@ -405,7 +448,8 @@
     </div>
 
     <script>
-        const CORRECT_PIN = "2026";
+        const MAIN_PIN = "2026";
+        const ADMIN_PIN = "9999"; // Hier kannst du den Admin-PIN nach Wunsch anpassen
 
         const defaultProducts = [
             {
@@ -436,52 +480,97 @@
 
         let products = JSON.parse(localStorage.getItem('luxevera_products')) || defaultProducts;
 
-        function checkPin() {
-            const pinInput = document.getElementById('pin-input');
-            const enteredPin = pinInput ? pinInput.value : '';
-            const errorMsg = document.getElementById('pin-error');
-
-            if (enteredPin === CORRECT_PIN) {
-                sessionStorage.setItem('luxevera_unlocked', 'true');
-                document.getElementById('pin-overlay').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
-                renderProducts();
-                renderAdminList();
-            } else {
-                if (errorMsg) errorMsg.style.display = 'block';
-                if (pinInput) pinInput.value = '';
-            }
-        }
-
         window.addEventListener('DOMContentLoaded', () => {
-            const pinBtn = document.getElementById('pin-submit-btn');
-            if (pinBtn) {
-                pinBtn.addEventListener('click', checkPin);
-            }
+            // Event-Listener für Haupt-PIN
+            const mainBtn = document.getElementById('main-pin-btn');
+            if (mainBtn) mainBtn.addEventListener('click', checkMainPin);
 
-            const pinInput = document.getElementById('pin-input');
-            if (pinInput) {
-                pinInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        checkPin();
-                    }
+            const mainInput = document.getElementById('main-pin-input');
+            if (mainInput) {
+                mainInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') checkMainPin();
                 });
             }
 
+            // Event-Listener für Admin-PIN
+            const adminBtn = document.getElementById('admin-pin-btn');
+            if (adminBtn) adminBtn.addEventListener('click', checkAdminPin);
+
+            const adminInput = document.getElementById('admin-pin-input');
+            if (adminInput) {
+                adminInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') checkAdminPin();
+                });
+            }
+
+            // Prüfen ob Startseite bereits entsperrt wurde
             if (sessionStorage.getItem('luxevera_unlocked') === 'true') {
                 document.getElementById('pin-overlay').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
                 renderProducts();
-                renderAdminList();
             } else {
                 document.getElementById('pin-overlay').style.display = 'flex';
                 document.getElementById('main-content').style.display = 'none';
             }
         });
 
+        // 1. Stufe PIN prüfen
+        function checkMainPin() {
+            const input = document.getElementById('main-pin-input');
+            const entered = input ? input.value : '';
+            const error = document.getElementById('main-pin-error');
+
+            if (entered === MAIN_PIN) {
+                sessionStorage.setItem('luxevera_unlocked', 'true');
+                document.getElementById('pin-overlay').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                renderProducts();
+            } else {
+                if (error) error.style.display = 'block';
+                if (input) input.value = '';
+            }
+        }
+
+        // Management-Button geklickt -> Admin-PIN abfragen
+        function requestAdminAccess() {
+            if (sessionStorage.getItem('luxevera_admin_unlocked') === 'true') {
+                toggleAdminPanel();
+            } else {
+                document.getElementById('admin-pin-modal').style.display = 'flex';
+                document.getElementById('admin-pin-input').focus();
+            }
+        }
+
+        function closeAdminPinModal() {
+            document.getElementById('admin-pin-modal').style.display = 'none';
+            document.getElementById('admin-pin-input').value = '';
+            document.getElementById('admin-pin-error').style.display = 'none';
+        }
+
+        // 2. Stufe Admin-PIN prüfen
+        function checkAdminPin() {
+            const input = document.getElementById('admin-pin-input');
+            const entered = input ? input.value : '';
+            const error = document.getElementById('admin-pin-error');
+
+            if (entered === ADMIN_PIN) {
+                sessionStorage.setItem('luxevera_admin_unlocked', 'true');
+                closeAdminPinModal();
+                toggleAdminPanel();
+            } else {
+                if (error) error.style.display = 'block';
+                if (input) input.value = '';
+            }
+        }
+
         function toggleAdminPanel() {
             const panel = document.getElementById('admin-panel');
-            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'block';
+                renderAdminList();
+            }
         }
 
         function renderProducts() {
