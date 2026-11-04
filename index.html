@@ -29,6 +29,7 @@
             padding-bottom: 50px;
         }
 
+        /* PIN-Schutz Overlay */
         #pin-overlay {
             position: fixed;
             top: 0;
@@ -106,8 +107,9 @@
             display: none;
         }
 
+        /* Hauptinhalt */
         #main-content {
-            display: block;
+            display: none;
         }
 
         header {
@@ -123,6 +125,7 @@
             margin-bottom: 10px;
         }
 
+        /* Admin Button */
         .admin-toggle-btn {
             position: absolute;
             top: 20px;
@@ -169,6 +172,7 @@
             color: #ffffff;
         }
 
+        /* Admin Panel Modal */
         #admin-panel {
             max-width: 800px;
             margin: 0 auto 40px;
@@ -268,6 +272,7 @@
             background-color: #843534;
         }
 
+        /* Produkt Grid */
         .grid-container {
             max-width: 1100px;
             margin: 0 auto;
@@ -337,6 +342,7 @@
 </head>
 <body>
 
+    <!-- PIN Abfrage Overlay (Geschützt mit PIN 2026) -->
     <div id="pin-overlay">
         <div class="pin-box">
             <h2>LUXEVERA</h2>
@@ -347,12 +353,14 @@
         </div>
     </div>
 
+    <!-- Eigentlicher Website-Inhalt -->
     <div id="main-content">
         <header>
             <button class="admin-toggle-btn" onclick="toggleAdminPanel()">⚙️ Management</button>
             <img src="logo.png" alt="LUXEVERA Logo" class="logo-img">
         </header>
 
+        <!-- Admin / Management Formular (Backend für den Kollegen) -->
         <div id="admin-panel">
             <h3>Produkt-Management</h3>
             <form id="product-form" onsubmit="addProduct(event)">
@@ -385,7 +393,9 @@
 
             <div class="admin-product-list">
                 <h4 style="margin-bottom: 15px; color: var(--text-dark);">Bestehende Produkte verwalten:</h4>
-                <div id="admin-list-container"></div>
+                <div id="admin-list-container">
+                    <!-- Dynamische Liste zum Löschen -->
+                </div>
             </div>
         </div>
 
@@ -397,6 +407,7 @@
         </div>
 
         <main class="grid-container" id="product-grid">
+            <!-- Dynamische Produkte -->
         </main>
 
         <footer>
@@ -407,6 +418,7 @@
     <script>
         const CORRECT_PIN = "2026";
 
+        // Standard-Produkte falls noch nichts im Speicher ist
         const defaultProducts = [
             {
                 id: 1,
@@ -434,38 +446,21 @@
             }
         ];
 
-        let products = JSON.parse(localStorage.getItem('luxevera_products'));
-        if (!products || !Array.isArray(products) || products.length === 0) {
-            products = defaultProducts;
-            localStorage.setItem('luxevera_products', JSON.stringify(products));
-        }
-
-        if (sessionStorage.getItem('luxevera_unlocked') === 'true') {
-            document.getElementById('pin-overlay').style.display = 'none';
-            document.getElementById('main-content').style.display = 'block';
-        } else {
-            document.getElementById('pin-overlay').style.display = 'flex';
-            document.getElementById('main-content').style.display = 'none';
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            renderProducts();
-            renderAdminList();
-        });
+        // Produkte aus LocalStorage laden oder mit Standards initialisieren
+        let products = JSON.parse(localStorage.getItem('luxevera_products')) || defaultProducts;
 
         function checkPin() {
             const enteredPin = document.getElementById('pin-input').value;
             const errorMsg = document.getElementById('pin-error');
 
             if (enteredPin === CORRECT_PIN) {
-                sessionStorage.setItem('luxevera_unlocked', 'true');
                 document.getElementById('pin-overlay').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
                 renderProducts();
                 renderAdminList();
             } else {
                 errorMsg.style.display = 'block';
-                document.getElementById('pin-input').value = '';
+                document.getElementById('pin-input'].value = '';
             }
         }
 
@@ -482,7 +477,6 @@
 
         function renderProducts() {
             const grid = document.getElementById('product-grid');
-            if (!grid) return;
             grid.innerHTML = '';
 
             if (products.length === 0) {
@@ -509,7 +503,6 @@
 
         function renderAdminList() {
             const listContainer = document.getElementById('admin-list-container');
-            if (!listContainer) return;
             listContainer.innerHTML = '';
 
             if (products.length === 0) {
