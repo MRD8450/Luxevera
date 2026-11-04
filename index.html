@@ -75,4 +75,92 @@
             font-size: 1.2rem;
             text-align: center;
             letter-spacing: 5px;
-            border: 1px solid var
+            border: 1px solid var(--accent-bronze);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .pin-box button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-bronze);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .pin-box button:hover {
+            background-color: var(--text-dark);
+        }
+
+        .pin-error {
+            color: #a94442;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* Hauptinhalt */
+        #main-content {
+            display: block;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            position: relative;
+        }
+
+        .logo-img {
+            max-width: 420px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        /* Admin Button */
+        .admin-toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 1px solid var(--accent-bronze);
+            color: var(--text-dark);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .admin-toggle-btn:hover {
+            background: var(--accent-bronze);
+            color: #fff;
+        }
+
+        .category-filter {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0 30px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: transparent;
+            border: 1px solid var(--accent-bronze);
+            padding: 8px 22px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            color: var(--text-dark);
+            cursor: pointer;
+            border-radius:
