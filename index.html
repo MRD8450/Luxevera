@@ -29,7 +29,7 @@
             padding-bottom: 50px;
         }
 
-        /* 1. Stufe PIN-Overlay (Normale Ansicht / Schutz) */
+        /* 1. Stufe PIN-Overlay (Normale Ansicht / Schutz mit 2026) */
         #pin-overlay {
             position: fixed;
             top: 0;
@@ -43,7 +43,7 @@
             z-index: 9999;
         }
 
-        /* 2. Stufe PIN-Modal (Admin-Bereich) */
+        /* 2. Stufe PIN-Modal (Admin-Bereich mit eigenem PIN) */
         #admin-pin-modal {
             position: fixed;
             top: 0;
@@ -376,7 +376,7 @@
         </div>
     </div>
 
-    <!-- 2. Stufe: Admin-PIN-Modal für das Management (PIN: z.B. 9999) -->
+    <!-- 2. Stufe: Admin-PIN-Modal für das Management (Admin-PIN: 8888 - kannst du anpassen) -->
     <div id="admin-pin-modal">
         <div class="pin-box">
             <button class="close-pin-btn" onclick="closeAdminPinModal()">×</button>
@@ -388,14 +388,14 @@
         </div>
     </div>
 
-    <!-- Hauptinhalt (Erst nach Eingabe von 2026 sichtbar) -->
+    <!-- Hauptinhalt -->
     <div id="main-content">
         <header>
             <button class="admin-toggle-btn" onclick="requestAdminAccess()">⚙️ Management</button>
             <img src="logo.png" alt="LUXEVERA Logo" class="logo-img">
         </header>
 
-        <!-- Admin Panel (Erst nach Admin-PIN sichtbar) -->
+        <!-- Admin Panel -->
         <div id="admin-panel">
             <h3>Produkt-Management</h3>
             <form id="product-form" onsubmit="addProduct(event)">
@@ -449,7 +449,7 @@
 
     <script>
         const MAIN_PIN = "2026";
-        const ADMIN_PIN = "9999"; // Hier kannst du den Admin-PIN nach Wunsch anpassen
+        const ADMIN_PIN = "8888"; // Hier kannst du den Admin-PIN für deinen Kollegen anpassen
 
         const defaultProducts = [
             {
@@ -503,7 +503,7 @@
                 });
             }
 
-            // Prüfen ob Startseite bereits entsperrt wurde
+            // Prüfen ob Startseite in dieser Session bereits entsperrt wurde
             if (sessionStorage.getItem('luxevera_unlocked') === 'true') {
                 document.getElementById('pin-overlay').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
@@ -514,7 +514,7 @@
             }
         });
 
-        // 1. Stufe PIN prüfen
+        // 1. Stufe Haupt-PIN prüfen
         function checkMainPin() {
             const input = document.getElementById('main-pin-input');
             const entered = input ? input.value : '';
@@ -531,14 +531,24 @@
             }
         }
 
-        // Management-Button geklickt -> Admin-PIN abfragen
+        // Management-Button geklickt -> IMMER erst Admin-PIN abfragen
         function requestAdminAccess() {
-            if (sessionStorage.getItem('luxevera_admin_unlocked') === 'true') {
-                toggleAdminPanel();
-            } else {
-                document.getElementById('admin-pin-modal').style.display = 'flex';
-                document.getElementById('admin-pin-input').focus();
+            const panel = document.getElementById('admin-panel');
+            
+            // Wenn das Panel bereits offen ist, schliessen
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+                return;
             }
+
+            // Sonst immer das PIN-Modal für den Admin-Bereich anzeigen
+            document.getElementById('admin-pin-modal').style.display = 'flex';
+            const adminInput = document.getElementById('admin-pin-input');
+            if(adminInput) {
+                adminInput.value = '';
+                adminInput.focus();
+            }
+            document.getElementById('admin-pin-error').style.display = 'none';
         }
 
         function closeAdminPinModal() {
@@ -554,22 +564,13 @@
             const error = document.getElementById('admin-pin-error');
 
             if (entered === ADMIN_PIN) {
-                sessionStorage.setItem('luxevera_admin_unlocked', 'true');
                 closeAdminPinModal();
-                toggleAdminPanel();
+                const panel = document.getElementById('admin-panel');
+                panel.style.display = 'block';
+                renderAdminList();
             } else {
                 if (error) error.style.display = 'block';
                 if (input) input.value = '';
-            }
-        }
-
-        function toggleAdminPanel() {
-            const panel = document.getElementById('admin-panel');
-            if (panel.style.display === 'block') {
-                panel.style.display = 'none';
-            } else {
-                panel.style.display = 'block';
-                renderAdminList();
             }
         }
 
@@ -645,7 +646,7 @@
                     products.unshift(newProduct);
                     saveAndRefresh();
                     document.getElementById('product-form').reset();
-                    toggleAdminPanel();
+                    document.getElementById('admin-panel').style.display = 'none';
                 };
                 reader.readAsDataURL(fileInput.files[0]);
             }
