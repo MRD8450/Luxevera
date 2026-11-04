@@ -342,7 +342,7 @@
             <h2>LUXEVERA</h2>
             <p>Bitte geben Sie den PIN-Code ein</p>
             <input type="password" id="pin-input" placeholder="••••" maxlength="6">
-            <button type="button" onclick="checkPin()">Zugriff anfordern</button>
+            <button type="button" id="pin-submit-btn">Zugriff anfordern</button>
             <div id="pin-error" class="pin-error">Falscher PIN-Code. Bitte versuchen Sie es erneut.</div>
         </div>
     </div>
@@ -436,18 +436,6 @@
 
         let products = JSON.parse(localStorage.getItem('luxevera_products')) || defaultProducts;
 
-        window.addEventListener('DOMContentLoaded', () => {
-            if (sessionStorage.getItem('luxevera_unlocked') === 'true') {
-                document.getElementById('pin-overlay').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
-                renderProducts();
-                renderAdminList();
-            } else {
-                document.getElementById('pin-overlay').style.display = 'flex';
-                document.getElementById('main-content').style.display = 'none';
-            }
-        });
-
         function checkPin() {
             const pinInput = document.getElementById('pin-input');
             const enteredPin = pinInput ? pinInput.value : '';
@@ -465,14 +453,31 @@
             }
         }
 
-        const pinInput = document.getElementById('pin-input');
-        if (pinInput) {
-            pinInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    checkPin();
-                }
-            });
-        }
+        window.addEventListener('DOMContentLoaded', () => {
+            const pinBtn = document.getElementById('pin-submit-btn');
+            if (pinBtn) {
+                pinBtn.addEventListener('click', checkPin);
+            }
+
+            const pinInput = document.getElementById('pin-input');
+            if (pinInput) {
+                pinInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        checkPin();
+                    }
+                });
+            }
+
+            if (sessionStorage.getItem('luxevera_unlocked') === 'true') {
+                document.getElementById('pin-overlay').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                renderProducts();
+                renderAdminList();
+            } else {
+                document.getElementById('pin-overlay').style.display = 'flex';
+                document.getElementById('main-content').style.display = 'none';
+            }
+        });
 
         function toggleAdminPanel() {
             const panel = document.getElementById('admin-panel');
