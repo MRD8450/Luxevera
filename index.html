@@ -163,4 +163,430 @@
             letter-spacing: 1px;
             color: var(--text-dark);
             cursor: pointer;
-            border-radius:
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background-color: var(--accent-bronze);
+            color: #ffffff;
+        }
+
+        /* Admin Panel Modal */
+        #admin-panel {
+            max-width: 800px;
+            margin: 0 auto 40px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        #admin-panel h3 {
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            color: var(--text-dark);
+            border-bottom: 1px solid rgba(115, 89, 66, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: var(--accent-bronze);
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--accent-bronze);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            outline: none;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            height: 80px;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-bronze);
+            color: #fff;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            transition: background 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--text-dark);
+        }
+
+        .admin-product-list {
+            margin-top: 30px;
+        }
+
+        .admin-product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(115, 89, 66, 0.1);
+        }
+
+        .admin-product-item span {
+            font-size: 0.95rem;
+            font-weight: bold;
+        }
+
+        .btn-danger {
+            background-color: #a94442;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .btn-danger:hover {
+            background-color: #843534;
+        }
+
+        /* Produkt Grid */
+        .grid-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .card-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+        }
+
+        .card-price {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--accent-bronze);
+            margin-bottom: 12px;
+        }
+
+        .card-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #4a3f35;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 0.85rem;
+            color: var(--accent-bronze);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PIN Abfrage Overlay -->
+    <div id="pin-overlay" style="display: none;">
+        <div class="pin-box">
+            <h2>LUXEVERA</h2>
+            <p>Bitte geben Sie den PIN-Code ein</p>
+            <input type="password" id="pin-input" placeholder="••••" maxlength="6">
+            <button onclick="checkPin()">Zugriff anfordern</button>
+            <div id="pin-error" class="pin-error">Falscher PIN-Code. Bitte versuchen Sie es erneut.</div>
+        </div>
+    </div>
+
+    <!-- Eigentlicher Website-Inhalt -->
+    <div id="main-content" style="display: block;">
+        <header>
+            <button class="admin-toggle-btn" onclick="toggleAdminPanel()">⚙️ Management</button>
+            <img src="logo.png" alt="LUXEVERA Logo" class="logo-img">
+        </header>
+
+        <!-- Admin / Management Formular (Backend für den Kollegen) -->
+        <div id="admin-panel">
+            <h3>Produkt-Management</h3>
+            <form id="product-form" onsubmit="addProduct(event)">
+                <div class="form-group">
+                    <label for="p-name">Produktname</label>
+                    <input type="text" id="p-name" required placeholder="z. B. Royale Jasmin Parfüm">
+                </div>
+                <div class="form-group">
+                    <label for="p-price">Preis (€)</label>
+                    <input type="text" id="p-price" required placeholder="z. B. 195,00 €">
+                </div>
+                <div class="form-group">
+                    <label for="p-category">Kategorie</label>
+                    <select id="p-category">
+                        <option value="parfum">Parfüm</option>
+                        <option value="makeup">Make-up</option>
+                        <option value="brillen">Brillen</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="p-desc">Beschreibung</label>
+                    <textarea id="p-desc" required placeholder="Edle Noten von..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="p-image">Produktbild vom Handy/PC auswählen</label>
+                    <input type="file" id="p-image" accept="image/*" required>
+                </div>
+                <button type="submit" class="btn-primary">Produkt hinzufügen</button>
+            </form>
+
+            <div class="admin-product-list">
+                <h4 style="margin-bottom: 15px; color: var(--text-dark);">Bestehende Produkte verwalten:</h4>
+                <div id="admin-list-container">
+                    <!-- Dynamische Liste zum Löschen -->
+                </div>
+            </div>
+        </div>
+
+        <div class="category-filter">
+            <button class="filter-btn active" onclick="filterCategory('all', event)">Alle</button>
+            <button class="filter-btn" onclick="filterCategory('parfum', event)">Parfüm</button>
+            <button class="filter-btn" onclick="filterCategory('makeup', event)">Make-up</button>
+            <button class="filter-btn" onclick="filterCategory('brillen', event)">Brillen</button>
+        </div>
+
+        <main class="grid-container" id="product-grid">
+            <!-- Dynamische Produkte -->
+        </main>
+
+        <footer>
+            <p>&copy; 2026 LUXEVERA. Alle Rechte vorbehalten.</p>
+        </footer>
+    </div>
+
+    <script>
+        const CORRECT_PIN = "2026";
+
+        // Standard-Produkte falls noch nichts im Speicher ist
+        const defaultProducts = [
+            {
+                id: 1,
+                name: "L'Élixir Noir",
+                price: "185,00 €",
+                description: "Sinnliches Eau de Parfum mit feinen Noten von Bourbon-Vanille, Amber und schwarzer Iris.",
+                category: "parfum",
+                image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 2,
+                name: "Velvet Touch Lipstick",
+                price: "42,00 €",
+                description: "Cremiger Lippenstift für intensive Farbe und ein samtiges Finish. Mit pflegendem Jojobaöl.",
+                category: "makeup",
+                image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 3,
+                name: "Aura Gold Sunglasses",
+                price: "290,00 €",
+                description: "Zeitlose Sonnenbrille mit handgefertigtem Titanrahmen in feiner Goldoptik und UV400-Schutz.",
+                category: "brillen",
+                image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80"
+            }
+        ];
+
+        // Produkte aus LocalStorage laden oder mit Standards initialisieren
+        let products = JSON.parse(localStorage.getItem('luxevera_products')) || defaultProducts;
+
+        // Sofortiges Rendern beim Start (sodass es nicht mehr nur beige bleibt)
+        window.addEventListener('DOMContentLoaded', () => {
+            renderProducts();
+            renderAdminList();
+        });
+
+        function checkPin() {
+            const enteredPin = document.getElementById('pin-input').value;
+            const errorMsg = document.getElementById('pin-error');
+
+            if (enteredPin === CORRECT_PIN) {
+                document.getElementById('pin-overlay').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                renderProducts();
+                renderAdminList();
+            } else {
+                errorMsg.style.display = 'block';
+                document.getElementById('pin-input').value = '';
+            }
+        }
+
+        document.getElementById('pin-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkPin();
+            }
+        });
+
+        function toggleAdminPanel() {
+            const panel = document.getElementById('admin-panel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = '';
+
+            if (products.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--accent-bronze); padding: 40px;">Keine Produkte vorhanden.</div>';
+                return;
+            }
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.setAttribute('data-category', product.category);
+
+                card.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}">
+                    <div class="card-body">
+                        <h2 class="card-title">${product.name}</h2>
+                        <div class="card-price">${product.price}</div>
+                        <p class="card-description">${product.description}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderAdminList() {
+            const listContainer = document.getElementById('admin-list-container');
+            listContainer.innerHTML = '';
+
+            if (products.length === 0) {
+                listContainer.innerHTML = '<p style="font-size: 0.9rem; color: var(--accent-bronze);">Keine Einträge vorhanden.</p>';
+                return;
+            }
+
+            products.forEach(product => {
+                const item = document.createElement('div');
+                item.className = 'admin-product-item';
+                item.innerHTML = `
+                    <span>${product.name} (${product.price})</span>
+                    <button class="btn-danger" onclick="deleteProduct(${product.id})">Löschen</button>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+        function addProduct(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('p-name').value;
+            const price = document.getElementById('p-price').value;
+            const category = document.getElementById('p-category').value;
+            const description = document.getElementById('p-desc').value;
+            const fileInput = document.getElementById('p-image');
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const newProduct = {
+                        id: Date.now(),
+                        name: name,
+                        price: price,
+                        description: description,
+                        category: category,
+                        image: e.target.result
+                    };
+
+                    products.unshift(newProduct);
+                    saveAndRefresh();
+                    document.getElementById('product-form').reset();
+                    toggleAdminPanel();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        function deleteProduct(id) {
+            if (confirm("Möchten Sie diesen Eintrag wirklich löschen?")) {
+                products = products.filter(p => p.id !== id);
+                saveAndRefresh();
+            }
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('luxevera_products', JSON.stringify(products));
+            renderProducts();
+            renderAdminList();
+        }
+
+        function filterCategory(category, event) {
+            const cards = document.querySelectorAll('.card');
+            const buttons = document.querySelectorAll('.filter-btn');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+            if(event) {
+                event.target.classList.add('active');
+            }
+
+            cards.forEach(card => {
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
