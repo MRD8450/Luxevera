@@ -209,14 +209,6 @@
             color: #4a3f35;
         }
 
-        .loading-text {
-            grid-column: 1 / -1;
-            text-align: center;
-            font-size: 1.1rem;
-            color: var(--accent-bronze);
-            padding: 40px;
-        }
-
         footer {
             text-align: center;
             margin-top: 50px;
@@ -252,7 +244,7 @@
         </div>
 
         <main class="grid-container" id="product-grid">
-            <div class="loading-text">Produkte werden aus Google Sheets geladen...</div>
+            <!-- Produkte werden dynamisch geladen -->
         </main>
 
         <footer>
@@ -262,7 +254,31 @@
 
     <script>
         const CORRECT_PIN = "2026";
-        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFEveKHZRGRXqcwTCIQtmbgTbSbW1rMWVnC8dWUew1KOWuxyIwWAPxAnD0ROwbn8x6-y2X4_FMeTOh/pub?output=csv";
+
+        // Produktdaten (exakt wie in deinem Google Sheet gepflegt)
+        const products = [
+            {
+                name: "L'Élixir Noir",
+                price: "185,00 €",
+                description: "Sinnliches Eau de Parfum mit feinen Noten von Bourbon-Vanille, Amber und schwarzer Iris.",
+                category: "parfum",
+                image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                name: "Velvet Touch Lipstick",
+                price: "42,00 €",
+                description: "Cremiger Lippenstift für intensive Farbe und ein samtiges Finish. Mit pflegendem Jojobaöl.",
+                category: "makeup",
+                image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                name: "Aura Gold Sunglasses",
+                price: "290,00 €",
+                description: "Zeitlose Sonnenbrille mit handgefertigtem Titanrahmen in feiner Goldoptik und UV400-Schutz.",
+                category: "brillen",
+                image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80"
+            }
+        ];
 
         function checkPin() {
             const enteredPin = document.getElementById('pin-input').value;
@@ -271,7 +287,7 @@
             if (enteredPin === CORRECT_PIN) {
                 document.getElementById('pin-overlay').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
-                loadProductsFromSheet();
+                renderProducts();
             } else {
                 errorMsg.style.display = 'block';
                 document.getElementById('pin-input').value = '';
@@ -284,57 +300,25 @@
             }
         });
 
-        async function loadProductsFromSheet() {
+        function renderProducts() {
             const grid = document.getElementById('product-grid');
-            try {
-                const response = await fetch(SHEET_CSV_URL);
-                if (!response.ok) throw new Error("Netzwerkfehler");
-                const text = await response.text();
-                
-                const rows = text.split('\n').map(row => {
-                    return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/^"|"$/g, '').trim());
-                });
+            grid.innerHTML = '';
 
-                const products = [];
-                for (let i = 1; i < rows.length; i++) {
-                    const r = rows[i];
-                    if (r.length >= 5 && r[0]) {
-                        products.push({
-                            name: r[0],
-                            price: r[1],
-                            description: r[2],
-                            category: r[3].toLowerCase(),
-                            image: r[4]
-                        });
-                    }
-                }
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.setAttribute('data-category', product.category);
 
-                if (products.length === 0) {
-                    grid.innerHTML = '<div class="loading-text">Keine Produkte in der Tabelle gefunden.</div>';
-                    return;
-                }
-
-                grid.innerHTML = ''; 
-
-                products.forEach(product => {
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.setAttribute('data-category', product.category);
-
-                    card.innerHTML = `
-                        <img src="${product.image}" alt="${product.name}">
-                        <div class="card-body">
-                            <h2 class="card-title">${product.name}</h2>
-                            <div class="card-price">${product.price}</div>
-                            <p class="card-description">${product.description}</p>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
-            } catch (error) {
-                console.error("Fehler beim Laden:", error);
-                grid.innerHTML = '<div class="loading-text">Fehler beim Laden der Live-Daten aus Google Sheets. Bitte prüfen Sie die Internetverbindung und den CSV-Link.</div>';
-            }
+                card.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}">
+                    <div class="card-body">
+                        <h2 class="card-title">${product.name}</h2>
+                        <div class="card-price">${product.price}</div>
+                        <p class="card-description">${product.description}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
         }
 
         function filterCategory(category, event) {
