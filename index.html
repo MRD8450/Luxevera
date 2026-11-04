@@ -29,7 +29,6 @@
             padding-bottom: 50px;
         }
 
-        /* PIN-Schutz Overlay */
         #pin-overlay {
             position: fixed;
             top: 0;
@@ -107,7 +106,6 @@
             display: none;
         }
 
-        /* Hauptinhalt */
         #main-content {
             display: none;
         }
@@ -125,7 +123,6 @@
             margin-bottom: 10px;
         }
 
-        /* Admin Button */
         .admin-toggle-btn {
             position: absolute;
             top: 20px;
@@ -172,7 +169,6 @@
             color: #ffffff;
         }
 
-        /* Admin Panel Modal */
         #admin-panel {
             max-width: 800px;
             margin: 0 auto 40px;
@@ -272,7 +268,6 @@
             background-color: #843534;
         }
 
-        /* Produkt Grid */
         .grid-container {
             max-width: 1100px;
             margin: 0 auto;
@@ -342,7 +337,6 @@
 </head>
 <body>
 
-    <!-- PIN Abfrage Overlay -->
     <div id="pin-overlay">
         <div class="pin-box">
             <h2>LUXEVERA</h2>
@@ -353,14 +347,12 @@
         </div>
     </div>
 
-    <!-- Eigentlicher Website-Inhalt -->
     <div id="main-content">
         <header>
             <button class="admin-toggle-btn" onclick="toggleAdminPanel()">⚙️ Management</button>
             <img src="logo.png" alt="LUXEVERA Logo" class="logo-img">
         </header>
 
-        <!-- Admin / Management Formular (Backend für den Kollegen) -->
         <div id="admin-panel">
             <h3>Produkt-Management</h3>
             <form id="product-form" onsubmit="addProduct(event)">
@@ -393,11 +385,205 @@
 
             <div class="admin-product-list">
                 <h4 style="margin-bottom: 15px; color: var(--text-dark);">Bestehende Produkte verwalten:</h4>
-                <div id="admin-list-container">
-                    <!-- Dynamische Liste zum Löschen -->
-                </div>
+                <div id="admin-list-container"></div>
             </div>
         </div>
 
         <div class="category-filter">
-            <button class="filter-btn active" onclick="filterCategory('all', event)">Alle</button
+            <button class="filter-btn active" onclick="filterCategory('all', event)">Alle</button>
+            <button class="filter-btn" onclick="filterCategory('parfum', event)">Parfüm</button>
+            <button class="filter-btn" onclick="filterCategory('makeup', event)">Make-up</button>
+            <button class="filter-btn" onclick="filterCategory('brillen', event)">Brillen</button>
+        </div>
+
+        <main class="grid-container" id="product-grid">
+        </main>
+
+        <footer>
+            <p>&copy; 2026 LUXEVERA. Alle Rechte vorbehalten.</p>
+        </footer>
+    </div>
+
+    <script>
+        const CORRECT_PIN = "2026";
+
+        const defaultProducts = [
+            {
+                id: 1,
+                name: "L'Élixir Noir",
+                price: "185,00 €",
+                description: "Sinnliches Eau de Parfum mit feinen Noten von Bourbon-Vanille, Amber und schwarzer Iris.",
+                category: "parfum",
+                image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 2,
+                name: "Velvet Touch Lipstick",
+                price: "42,00 €",
+                description: "Cremiger Lippenstift für intensive Farbe und ein samtiges Finish. Mit pflegendem Jojobaöl.",
+                category: "makeup",
+                image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 3,
+                name: "Aura Gold Sunglasses",
+                price: "290,00 €",
+                description: "Zeitlose Sonnenbrille mit handgefertigtem Titanrahmen in feiner Goldoptik und UV400-Schutz.",
+                category: "brillen",
+                image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80"
+            }
+        ];
+
+        let products = JSON.parse(localStorage.getItem('luxevera_products')) || defaultProducts;
+
+        // Sofort beim Laden prüfen, ob der PIN in dieser Session bereits eingegeben wurde
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('luxevera_unlocked') === 'true') {
+                document.getElementById('pin-overlay').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                renderProducts();
+                renderAdminList();
+            }
+        });
+
+        function checkPin() {
+            const enteredPin = document.getElementById('pin-input').value;
+            const errorMsg = document.getElementById('pin-error');
+
+            if (enteredPin === CORRECT_PIN) {
+                sessionStorage.setItem('luxevera_unlocked', 'true');
+                document.getElementById('pin-overlay').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                renderProducts();
+                renderAdminList();
+            } else {
+                errorMsg.style.display = 'block';
+                document.getElementById('pin-input').value = '';
+            }
+        }
+
+        const pinInput = document.getElementById('pin-input');
+        if (pinInput) {
+            pinInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkPin();
+                }
+            });
+        }
+
+        function toggleAdminPanel() {
+            const panel = document.getElementById('admin-panel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('product-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            if (products.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--accent-bronze); padding: 40px;">Keine Produkte vorhanden.</div>';
+                return;
+            }
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.setAttribute('data-category', product.category);
+
+                card.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}">
+                    <div class="card-body">
+                        <h2 class="card-title">${product.name}</h2>
+                        <div class="card-price">${product.price}</div>
+                        <p class="card-description">${product.description}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderAdminList() {
+            const listContainer = document.getElementById('admin-list-container');
+            if (!listContainer) return;
+            listContainer.innerHTML = '';
+
+            if (products.length === 0) {
+                listContainer.innerHTML = '<p style="font-size: 0.9rem; color: var(--accent-bronze);">Keine Einträge vorhanden.</p>';
+                return;
+            }
+
+            products.forEach(product => {
+                const item = document.createElement('div');
+                item.className = 'admin-product-item';
+                item.innerHTML = `
+                    <span>${product.name} (${product.price})</span>
+                    <button class="btn-danger" onclick="deleteProduct(${product.id})">Löschen</button>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+        function addProduct(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('p-name').value;
+            const price = document.getElementById('p-price').value;
+            const category = document.getElementById('p-category').value;
+            const description = document.getElementById('p-desc').value;
+            const fileInput = document.getElementById('p-image');
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const newProduct = {
+                        id: Date.now(),
+                        name: name,
+                        price: price,
+                        description: description,
+                        category: category,
+                        image: e.target.result
+                    };
+
+                    products.unshift(newProduct);
+                    saveAndRefresh();
+                    document.getElementById('product-form').reset();
+                    toggleAdminPanel();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        function deleteProduct(id) {
+            if (confirm("Möchten Sie diesen Eintrag wirklich löschen?")) {
+                products = products.filter(p => p.id !== id);
+                saveAndRefresh();
+            }
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('luxevera_products', JSON.stringify(products));
+            renderProducts();
+            renderAdminList();
+        }
+
+        function filterCategory(category, event) {
+            const cards = document.querySelectorAll('.card');
+            const buttons = document.querySelectorAll('.filter-btn');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+            if(event) {
+                event.target.classList.add('active');
+            }
+
+            cards.forEach(card => {
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
