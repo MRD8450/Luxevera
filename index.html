@@ -12,7 +12,7 @@
         :root {
             --bg-gradient-start: #e5d9cc;
             --bg-gradient-end: #c4b09c;
-            --card-bg: rgba(255, 255, 255, 0.75);
+            --card-bg: rgba(255, 255, 255, 0.85);
             --text-dark: #2a211c;
             --accent-bronze: #735942;
             --accent-gold: #b39368;
@@ -36,21 +36,21 @@
 
         #pin-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
-            display: flex; justify-content: center; align-items: center; z-index: 99999;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #e5d9cc;
+            display: flex; justify-content: center; align-items: center; z-index: 999999;
         }
 
         #admin-pin-modal {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(8px);
-            display: none; justify-content: center; align-items: center; z-index: 100000;
+            display: none; justify-content: center; align-items: center; z-index: 1000000;
         }
 
         .pin-box {
-            background: var(--card-bg); backdrop-filter: blur(15px); padding: 40px;
-            border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.5);
+            background: var(--card-bg); padding: 40px;
+            border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.8);
             box-shadow: var(--shadow); text-align: center; max-width: 380px; width: 90%;
             position: relative;
         }
@@ -60,14 +60,15 @@
         .pin-box input {
             width: 100%; padding: 12px; font-size: 1.2rem; text-align: center;
             letter-spacing: 5px; border: 1px solid var(--accent-bronze); border-radius: 8px;
-            background: rgba(255, 255, 255, 0.9); margin-bottom: 15px; outline: none;
+            background: #fff; margin-bottom: 15px; outline: none;
         }
 
         .pin-box button {
             width: 100%; padding: 12px; background-color: var(--accent-bronze);
             color: #ffffff; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer;
-            pointer-events: auto !important;
         }
+
+        .pin-box button:hover { background-color: #5a4433; }
 
         .close-pin-btn { position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; }
         .pin-error { color: #a94442; font-size: 0.85rem; margin-top: 10px; display: none; }
@@ -161,7 +162,6 @@
 </head>
 <body>
 
-    <!-- Direktes HTML onclick eingebaut -->
     <div id="pin-overlay">
         <div class="pin-box">
             <h2>LUXEVERA</h2>
@@ -238,4 +238,277 @@
                 </div>
             </div>
             <div class="category-tile" onclick="openCategory('parfum', 'Parfüm')">
-                <img src="
+                <img src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80" alt="Parfüm">
+                <div class="category-tile-overlay">
+                    <div class="category-tile-title">Parfüm</div>
+                </div>
+            </div>
+            <div class="category-tile" onclick="openCategory('kosmetik', 'Kosmetik & Make-up')">
+                <img src="https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80" alt="Kosmetik">
+                <div class="category-tile-overlay">
+                    <div class="category-tile-title">Kosmetik</div>
+                </div>
+            </div>
+            <div class="category-tile" onclick="openCategory('accessoires', 'Accessoires')">
+                <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80" alt="Accessoires">
+                <div class="category-tile-overlay">
+                    <div class="category-tile-title">Accessoires</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="back-nav" class="back-nav">
+            <button class="back-btn" type="button" onclick="showCategories()">← Kategorien</button>
+            <div id="active-cat-title" class="active-cat-title">Kategorie</div>
+        </div>
+
+        <div id="product-container">
+            <main class="grid-container" id="product-grid"></main>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 LUXEVERA. Alle Rechte vorbehalten.</p>
+        </footer>
+    </div>
+
+    <script>
+        const MAIN_PIN = "2026";
+        const ADMIN_PIN = "8888";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVtkEgwnm6YF199D1N2EKoyZX5KRO1t2JSMHKtAUE8f1LJhI2BdKH1HfIEbY60HLGUmw/exec";
+
+        let products = [];
+        let activeCategory = 'all';
+
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('main-pin-input').addEventListener('keydown', e => {
+                if (e.key === 'Enter') checkMainPin();
+            });
+            document.getElementById('admin-pin-input').addEventListener('keydown', e => {
+                if (e.key === 'Enter') checkAdminPin();
+            });
+
+            if (sessionStorage.getItem('luxevera_unlocked') === 'true') {
+                document.getElementById('pin-overlay').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+            }
+
+            const localData = localStorage.getItem('luxevera_local_cache');
+            if (localData) {
+                products = JSON.parse(localData);
+                renderProducts();
+                renderAdminList();
+            }
+
+            loadProductsFromGoogle();
+            setInterval(loadProductsFromGoogle, 5000);
+        });
+
+        function checkMainPin() {
+            const val = document.getElementById('main-pin-input').value.trim();
+            if (val === MAIN_PIN) {
+                sessionStorage.setItem('luxevera_unlocked', 'true');
+                document.getElementById('pin-overlay').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                loadProductsFromGoogle();
+            } else {
+                document.getElementById('main-pin-error').style.display = 'block';
+                document.getElementById('main-pin-input').value = '';
+            }
+        }
+
+        function requestAdminAccess() {
+            const panel = document.getElementById('admin-panel');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+                return;
+            }
+            document.getElementById('admin-pin-modal').style.display = 'flex';
+            document.getElementById('admin-pin-input').value = '';
+            document.getElementById('admin-pin-input').focus();
+            document.getElementById('admin-pin-error').style.display = 'none';
+        }
+
+        function closeAdminPinModal() {
+            document.getElementById('admin-pin-modal').style.display = 'none';
+        }
+
+        function checkAdminPin() {
+            const val = document.getElementById('admin-pin-input').value.trim();
+            if (val === ADMIN_PIN) {
+                closeAdminPinModal();
+                document.getElementById('admin-panel').style.display = 'block';
+                renderAdminList();
+            } else {
+                document.getElementById('admin-pin-error').style.display = 'block';
+                document.getElementById('admin-pin-input').value = '';
+            }
+        }
+
+        function loadProductsFromGoogle() {
+            fetch(GOOGLE_SCRIPT_URL)
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data) && data.length > 0) {
+                    products = data;
+                    localStorage.setItem('luxevera_local_cache', JSON.stringify(products));
+                    renderProducts();
+                    renderAdminList();
+                }
+            })
+            .catch(err => console.error("Fehler beim Laden von Google:", err));
+        }
+
+        function saveProductsToGoogle() {
+            localStorage.setItem('luxevera_local_cache', JSON.stringify(products));
+            renderProducts();
+            renderAdminList();
+
+            const btn = document.getElementById('save-btn');
+            if(btn) btn.innerText = "Synchronisiere mit Google...";
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: "save", products: products })
+            })
+            .then(() => {
+                if(btn) btn.innerText = "Produkt hinzufügen";
+                alert("Erfolgreich gespeichert und synchronisiert!");
+            })
+            .catch(err => {
+                if(btn) btn.innerText = "Produkt hinzufügen";
+                console.error("Fehler beim Speichern:", err);
+            });
+        }
+
+        function openCategory(catKey, catTitle) {
+            activeCategory = catKey;
+            document.getElementById('category-tiles').style.display = 'none';
+            document.getElementById('back-nav').style.display = 'flex';
+            document.getElementById('product-container').style.display = 'block';
+            document.getElementById('active-cat-title').innerText = catTitle;
+            renderProducts();
+        }
+
+        function showCategories() {
+            document.getElementById('category-tiles').style.display = 'grid';
+            document.getElementById('back-nav').style.display = 'none';
+            document.getElementById('product-container').style.display = 'none';
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('product-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const filtered = products.filter(p => p.category === activeCategory);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--accent-bronze); padding: 40px;">In dieser Kategorie befinden sich aktuell keine Produkte.</div>';
+                return;
+            }
+
+            filtered.forEach(p => {
+                const card = document.createElement('div');
+                card.className = `card ${p.category === 'angebote' ? 'special-offer-card' : ''}`;
+                
+                card.innerHTML = `
+                    ${p.category === 'angebote' ? '<span class="tile-badge">Special Deal</span>' : ''}
+                    <img src="${p.image}" alt="${p.name}">
+                    <div class="card-body">
+                        <h2 class="card-title">${p.name}</h2>
+                        <div class="card-price">${p.price}</div>
+                        <p class="card-description">${p.description}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderAdminList() {
+            const container = document.getElementById('admin-list-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            products.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'admin-product-item';
+                item.innerHTML = `
+                    <span>[${p.category.toUpperCase()}] ${p.name} (${p.price})</span>
+                    <button type="button" class="btn-danger" onclick="deleteProduct('${p.id}')">Löschen</button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function addProduct(e) {
+            e.preventDefault();
+            const name = document.getElementById('p-name').value;
+            let rawPrice = document.getElementById('p-price').value.trim();
+            if (!rawPrice.endsWith('€')) {
+                rawPrice += ' €';
+            }
+
+            const category = document.getElementById('p-category').value;
+            const description = document.getElementById('p-desc').value;
+            const fileInput = document.getElementById('p-image');
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const img = new Image();
+                    img.src = evt.target.result;
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        const maxDim = 500;
+
+                        if (width > height) {
+                            if (width > maxDim) {
+                                height *= maxDim / width;
+                                width = maxDim;
+                            }
+                        } else {
+                            if (height > maxDim) {
+                                width *= maxDim / height;
+                                height = maxDim;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const optimizedImageBase64 = canvas.toDataURL('image/jpeg', 0.65);
+
+                        const newProd = {
+                            id: Date.now().toString(),
+                            name: name,
+                            price: rawPrice,
+                            category: category,
+                            description: description,
+                            image: optimizedImageBase64
+                        };
+
+                        products.unshift(newProd);
+                        saveProductsToGoogle();
+                        document.getElementById('product-form').reset();
+                        document.getElementById('admin-panel').style.display = 'none';
+                    };
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        function deleteProduct(id) {
+            if (confirm("Möchten Sie dieses Produkt löschen?")) {
+                products = products.filter(p => p.id !== id);
+                saveProductsToGoogle();
+            }
+        }
+    </script>
+</body>
+</html>
