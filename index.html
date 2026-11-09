@@ -9,10 +9,6 @@
     <link rel="apple-touch-icon" href="logo.png">
     <link rel="icon" type="image/png" href="logo.png">
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
     <style>
         :root {
             --bg-gradient-start: #e5d9cc;
@@ -262,13 +258,15 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
+        /* Zurück & Überschrift Navigation (Links ausgerichtet) */
         .back-nav {
             max-width: 1100px;
-            margin: 20px auto 10px;
+            margin: 20px auto 15px;
             padding: 0 20px;
             display: none;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
+            gap: 20px;
         }
 
         .back-btn {
@@ -289,10 +287,11 @@
         }
 
         .active-cat-title {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             text-transform: uppercase;
             letter-spacing: 2px;
             color: var(--accent-bronze);
+            font-weight: bold;
         }
 
         #admin-panel {
@@ -342,6 +341,25 @@
         .form-group textarea {
             resize: vertical;
             height: 80px;
+        }
+
+        /* Preis-Input mit automatischem €-Symbol */
+        .price-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .price-input-wrapper input {
+            padding-right: 35px;
+        }
+
+        .price-symbol {
+            position: absolute;
+            right: 15px;
+            color: var(--accent-bronze);
+            font-weight: bold;
+            pointer-events: none;
         }
 
         .btn-primary {
@@ -515,8 +533,11 @@
                     <input type="text" id="p-name" required placeholder="z. B. Royale Jasmin Parfüm">
                 </div>
                 <div class="form-group">
-                    <label for="p-price">Preis (€)</label>
-                    <input type="text" id="p-price" required placeholder="z. B. 195,00 €">
+                    <label for="p-price">Preis</label>
+                    <div class="price-input-wrapper">
+                        <input type="text" id="p-price" required placeholder="195,00">
+                        <span class="price-symbol">€</span>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="p-category">Kategorie</label>
@@ -544,11 +565,11 @@
             </div>
         </div>
 
-        <!-- 3. Kacheln Navigation für Kategorien -->
+        <!-- 3. Kacheln Navigation für Kategorien (Neues Bild für Angebote) -->
         <div id="category-tiles" class="category-tiles-container">
             <div class="category-tile offer-tile" onclick="openCategory('angebote', '🔥 Angebote der Woche')">
                 <span class="tile-badge">Special Deal</span>
-                <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80" alt="Angebote">
+                <img src="https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&w=600&q=80" alt="Angebote">
                 <div class="category-tile-overlay">
                     <div class="category-tile-title">Angebote der Woche</div>
                 </div>
@@ -573,7 +594,7 @@
             </div>
         </div>
 
-        <!-- Back Navigation & Produktübersicht -->
+        <!-- Back Navigation & Produktübersicht (Links ausgerichtet) -->
         <div id="back-nav" class="back-nav">
             <button class="back-btn" onclick="showCategories()">← Kategorien</button>
             <div id="active-cat-title" class="active-cat-title">Kategorie</div>
@@ -592,55 +613,13 @@
         const MAIN_PIN = "2026";
         const ADMIN_PIN = "8888";
 
-        // Firebase Konfiguration (Hier deine Daten eintragen)
-        const firebaseConfig = {
-            apiKey: "DEIN_API_KEY",
-            authDomain: "DEIN_PROJEKT.firebaseapp.com",
-            databaseURL: "https://DEIN_PROJEKT-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "DEIN_PROJEKT",
-            storageBucket: "DEIN_PROJEKT.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef"
-        };
+        const BIN_ID = "6af1c6baac6210605a79cd46"; 
+        const API_KEY = "$2a$10$w97GuBHvXwnKVgYqmddkNe.1i/E2X53QhTTq4oLYcskKwAtQPKlO6";
 
-        let db = null;
-        if (firebaseConfig.apiKey !== "DEIN_API_KEY") {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.database();
-        }
-
-        const defaultProducts = [
-            {
-                id: "1",
-                name: "L'Élixir Noir",
-                price: "145,00 € (statt 185,00 €)",
-                description: "Sinnliches Eau de Parfum mit feinen Noten von Bourbon-Vanille, Amber und schwarzer Iris.",
-                category: "angebote",
-                image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80"
-            },
-            {
-                id: "2",
-                name: "Velvet Touch Lipstick",
-                price: "42,00 €",
-                description: "Cremiger Lippenstift für intensive Farbe und ein samtiges Finish.",
-                category: "kosmetik",
-                image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80"
-            },
-            {
-                id: "3",
-                name: "Aura Gold Sunglasses",
-                price: "290,00 €",
-                description: "Zeitlose Sonnenbrille mit handgefertigtem Titanrahmen in feiner Goldoptik.",
-                category: "accessoires",
-                image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80"
-            }
-        ];
-
-        let products = defaultProducts;
+        let products = [];
         let activeCategory = 'all';
 
         window.addEventListener('DOMContentLoaded', () => {
-            // Enter-Tasten Unterstützung
             document.getElementById('main-pin-input').addEventListener('keypress', e => { if (e.key === 'Enter') checkMainPin(); });
             document.getElementById('admin-pin-input').addEventListener('keypress', e => { if (e.key === 'Enter') checkAdminPin(); });
 
@@ -649,24 +628,38 @@
                 document.getElementById('main-content').style.display = 'block';
             }
 
-            if (db) {
-                db.ref('products').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        products = Object.values(data);
-                    } else {
-                        products = defaultProducts;
-                    }
-                    renderProducts();
-                    renderAdminList();
-                });
-            } else {
-                const local = localStorage.getItem('luxevera_products');
-                if (local) products = JSON.parse(local);
+            loadProductsFromCloud();
+        });
+
+        function loadProductsFromCloud() {
+            fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                headers: { 'X-Master-Key': API_KEY }
+            })
+            .then(res => res.json())
+            .then(data => {
+                products = data.record || [];
                 renderProducts();
                 renderAdminList();
-            }
-        });
+            })
+            .catch(err => console.error("Fehler beim Laden:", err));
+        }
+
+        function saveProductsToCloud() {
+            fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': API_KEY
+                },
+                body: JSON.stringify(products)
+            })
+            .then(res => res.json())
+            .then(() => {
+                renderProducts();
+                renderAdminList();
+            })
+            .catch(err => console.error("Fehler beim Speichern:", err));
+        }
 
         function checkMainPin() {
             const val = document.getElementById('main-pin-input').value;
@@ -674,6 +667,7 @@
                 sessionStorage.setItem('luxevera_unlocked', 'true');
                 document.getElementById('pin-overlay').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
+                loadProductsFromCloud();
             } else {
                 document.getElementById('main-pin-error').style.display = 'block';
                 document.getElementById('main-pin-input').value = '';
@@ -771,7 +765,12 @@
         function addProduct(e) {
             e.preventDefault();
             const name = document.getElementById('p-name').value;
-            const price = document.getElementById('p-price').value;
+            let rawPrice = document.getElementById('p-price').value.trim();
+            // Automatisch sicherstellen, dass das €-Zeichen am Ende steht falls es vergessen wurde
+            if (!rawPrice.endsWith('€')) {
+                rawPrice += ' €';
+            }
+
             const category = document.getElementById('p-category').value;
             const description = document.getElementById('p-desc').value;
             const fileInput = document.getElementById('p-image');
@@ -782,21 +781,14 @@
                     const newProd = {
                         id: Date.now().toString(),
                         name: name,
-                        price: price,
+                        price: rawPrice,
                         category: category,
                         description: description,
                         image: evt.target.result
                     };
 
-                    if (db) {
-                        db.ref('products/' + newProd.id).set(newProd);
-                    } else {
-                        products.unshift(newProd);
-                        localStorage.setItem('luxevera_products', JSON.stringify(products));
-                        renderProducts();
-                        renderAdminList();
-                    }
-
+                    products.unshift(newProd);
+                    saveProductsToCloud();
                     document.getElementById('product-form').reset();
                     document.getElementById('admin-panel').style.display = 'none';
                 };
@@ -806,14 +798,8 @@
 
         function deleteProduct(id) {
             if (confirm("Möchten Sie dieses Produkt löschen?")) {
-                if (db) {
-                    db.ref('products/' + id).remove();
-                } else {
-                    products = products.filter(p => p.id !== id);
-                    localStorage.setItem('luxevera_products', JSON.stringify(products));
-                    renderProducts();
-                    renderAdminList();
-                }
+                products = products.filter(p => p.id !== id);
+                saveProductsToCloud();
             }
         }
     </script>
