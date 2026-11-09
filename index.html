@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LUXEVERA | Luxury Product Showcase</title>
+
+    <!-- App Icon für iOS / Android Home-Bildschirm & Browser-Favicon -->
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" type="image/png" href="logo.png">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <style>
         :root {
             --bg-gradient-start: #e5d9cc;
@@ -12,6 +21,7 @@
             --text-dark: #2a211c;
             --accent-bronze: #735942;
             --accent-gold: #b39368;
+            --accent-gold-bright: #d4af37;
             --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
         }
 
@@ -29,7 +39,7 @@
             padding-bottom: 50px;
         }
 
-        /* 1. Stufe PIN-Overlay (Normale Ansicht / Schutz mit 2026) */
+        /* 1. Stufe: Startseiten-PIN Overlay (2026) */
         #pin-overlay {
             position: fixed;
             top: 0;
@@ -43,14 +53,14 @@
             z-index: 9999;
         }
 
-        /* 2. Stufe PIN-Modal (Admin-Bereich mit eigenem PIN) */
+        /* 2. Stufe: Admin-PIN Modal (8888) */
         #admin-pin-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(8px);
             display: none;
             justify-content: center;
@@ -145,7 +155,7 @@
         }
 
         .logo-img {
-            max-width: 420px;
+            max-width: 320px;
             width: 100%;
             height: auto;
             margin-bottom: 10px;
@@ -171,32 +181,123 @@
             color: #fff;
         }
 
-        .category-filter {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0 30px;
-            flex-wrap: wrap;
+        /* Kachel-Raster für Kategorien */
+        .category-tiles-container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
         }
 
-        .filter-btn {
+        .category-tile {
+            position: relative;
+            height: 220px;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .category-tile:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18);
+        }
+
+        .category-tile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .category-tile:hover img {
+            transform: scale(1.08);
+        }
+
+        .category-tile-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(42, 33, 28, 0.85), rgba(0, 0, 0, 0.1));
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+        }
+
+        .category-tile-title {
+            color: #ffffff;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        /* Highlight-Design für Angebote der Woche Kachel */
+        .category-tile.offer-tile {
+            border: 2px solid var(--accent-gold-bright);
+        }
+
+        .category-tile.offer-tile .category-tile-overlay {
+            background: linear-gradient(to top, rgba(115, 89, 66, 0.9), rgba(212, 175, 55, 0.3));
+        }
+
+        .tile-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: var(--accent-gold-bright);
+            color: #2a211c;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Navigation zurück */
+        .back-nav {
+            max-width: 1100px;
+            margin: 20px auto 10px;
+            padding: 0 20px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .back-btn {
             background: transparent;
             border: 1px solid var(--accent-bronze);
-            padding: 8px 22px;
+            color: var(--text-dark);
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
             font-family: inherit;
             font-size: 0.9rem;
-            letter-spacing: 1px;
-            color: var(--text-dark);
-            cursor: pointer;
-            border-radius: 20px;
             transition: all 0.3s ease;
         }
 
-        .filter-btn:hover, .filter-btn.active {
-            background-color: var(--accent-bronze);
-            color: #ffffff;
+        .back-btn:hover {
+            background: var(--accent-bronze);
+            color: #fff;
         }
 
+        .active-cat-title {
+            font-size: 1.4rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-bronze);
+        }
+
+        /* Admin Panel */
         #admin-panel {
             max-width: 800px;
             margin: 0 auto 40px;
@@ -296,6 +397,11 @@
             background-color: #843534;
         }
 
+        /* Produkt Grid */
+        #product-container {
+            display: none;
+        }
+
         .grid-container {
             max-width: 1100px;
             margin: 0 auto;
@@ -314,12 +420,17 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            position: relative;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .card.special-offer-card {
+            border: 2px solid var(--accent-gold-bright);
         }
 
         .card img {
@@ -349,6 +460,10 @@
             margin-bottom: 12px;
         }
 
+        .card.special-offer-card .card-price {
+            color: #b8860b;
+        }
+
         .card-description {
             font-size: 0.95rem;
             line-height: 1.5;
@@ -365,7 +480,7 @@
 </head>
 <body>
 
-    <!-- 1. Stufe: Normaler PIN-Schutz für die Startseite (PIN: 2026) -->
+    <!-- 1. Stufe PIN Overlay (2026) -->
     <div id="pin-overlay">
         <div class="pin-box">
             <h2>LUXEVERA</h2>
@@ -376,7 +491,7 @@
         </div>
     </div>
 
-    <!-- 2. Stufe: Admin-PIN-Modal für das Management (Admin-PIN: 8888 - kannst du anpassen) -->
+    <!-- 2. Stufe Admin PIN Modal (8888) -->
     <div id="admin-pin-modal">
         <div class="pin-box">
             <button class="close-pin-btn" onclick="closeAdminPinModal()">×</button>
@@ -410,9 +525,10 @@
                 <div class="form-group">
                     <label for="p-category">Kategorie</label>
                     <select id="p-category">
+                        <option value="angebote">🔥 Angebote der Woche</option>
                         <option value="parfum">Parfüm</option>
-                        <option value="makeup">Make-up</option>
-                        <option value="brillen">Brillen</option>
+                        <option value="kosmetik">Kosmetik & Make-up</option>
+                        <option value="accessoires">Accessoires & Brillen</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -420,7 +536,7 @@
                     <textarea id="p-desc" required placeholder="Edle Noten von..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="p-image">Produktbild vom Handy/PC auswählen</label>
+                    <label for="p-image">Produktbild auswählen</label>
                     <input type="file" id="p-image" accept="image/*" required>
                 </div>
                 <button type="submit" class="btn-primary">Produkt hinzufügen</button>
@@ -432,15 +548,44 @@
             </div>
         </div>
 
-        <div class="category-filter">
-            <button class="filter-btn active" onclick="filterCategory('all', event)">Alle</button>
-            <button class="filter-btn" onclick="filterCategory('parfum', event)">Parfüm</button>
-            <button class="filter-btn" onclick="filterCategory('makeup', event)">Make-up</button>
-            <button class="filter-btn" onclick="filterCategory('brillen', event)">Brillen</button>
+        <!-- 3. Kacheln Navigation für Kategorien -->
+        <div id="category-tiles" class="category-tiles-container">
+            <div class="category-tile offer-tile" onclick="openCategory('angebote', '🔥 Angebote der Woche')">
+                <span class="tile-badge">Special Deal</span>
+                <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80" alt="Angebote">
+                <div class="category-tile-overlay">
+                    <div class="category-tile-title">Angebote der Woche</div>
+                </div>
+            </div>
+            <div class="category-tile" onclick="openCategory('parfum', 'Parfüm')">
+                <img src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80" alt="Parfüm">
+                <div class="category-tile-overlay">
+                    <div class="category-tile-title">Parfüm</div>
+                </div>
+            </div>
+            <div class="category-tile" onclick="openCategory('kosmetik', 'Kosmetik & Make-up')">
+                <img src="https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80" alt="Kosmetik">
+                <div class="category-tile-overlay">
+                    <div class="category-tile-title">Kosmetik</div>
+                </div>
+            </div>
+            <div class="category-tile" onclick="openCategory('accessoires', 'Accessoires')">
+                <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80" alt="Accessoires">
+                <div class="category-tile-overlay">
+                    <div class="category-tile-title">Accessoires</div>
+                </div>
+            </div>
         </div>
 
-        <main class="grid-container" id="product-grid">
-        </main>
+        <!-- Back Navigation & Produktübersicht -->
+        <div id="back-nav" class="back-nav">
+            <button class="back-btn" onclick="showCategories()">← Kategorien</button>
+            <div id="active-cat-title" class="active-cat-title">Kategorie</div>
+        </div>
+
+        <div id="product-container">
+            <main class="grid-container" id="product-grid"></main>
+        </div>
 
         <footer>
             <p>&copy; 2026 LUXEVERA. Alle Rechte vorbehalten.</p>
@@ -449,239 +594,20 @@
 
     <script>
         const MAIN_PIN = "2026";
-        const ADMIN_PIN = "8888"; // Hier kannst du den Admin-PIN für deinen Kollegen anpassen
+        const ADMIN_PIN = "8888";
 
-        const defaultProducts = [
-            {
-                id: 1,
-                name: "L'Élixir Noir",
-                price: "185,00 €",
-                description: "Sinnliches Eau de Parfum mit feinen Noten von Bourbon-Vanille, Amber und schwarzer Iris.",
-                category: "parfum",
-                image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80"
-            },
-            {
-                id: 2,
-                name: "Velvet Touch Lipstick",
-                price: "42,00 €",
-                description: "Cremiger Lippenstift für intensive Farbe und ein samtiges Finish. Mit pflegendem Jojobaöl.",
-                category: "makeup",
-                image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80"
-            },
-            {
-                id: 3,
-                name: "Aura Gold Sunglasses",
-                price: "290,00 €",
-                description: "Zeitlose Sonnenbrille mit handgefertigtem Titanrahmen in feiner Goldoptik und UV400-Schutz.",
-                category: "brillen",
-                image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80"
-            }
-        ];
+        // Firebase Konfiguration (Hier deine Daten aus der Firebase-Konsole eintragen!)
+        const firebaseConfig = {
+            apiKey: "DEIN_API_KEY",
+            authDomain: "DEIN_PROJEKT.firebaseapp.com",
+            databaseURL: "https://DEIN_PROJEKT-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "DEIN_PROJEKT",
+            storageBucket: "DEIN_PROJEKT.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
 
-        let products = JSON.parse(localStorage.getItem('luxevera_products')) || defaultProducts;
-
-        window.addEventListener('DOMContentLoaded', () => {
-            // Event-Listener für Haupt-PIN
-            const mainBtn = document.getElementById('main-pin-btn');
-            if (mainBtn) mainBtn.addEventListener('click', checkMainPin);
-
-            const mainInput = document.getElementById('main-pin-input');
-            if (mainInput) {
-                mainInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') checkMainPin();
-                });
-            }
-
-            // Event-Listener für Admin-PIN
-            const adminBtn = document.getElementById('admin-pin-btn');
-            if (adminBtn) adminBtn.addEventListener('click', checkAdminPin);
-
-            const adminInput = document.getElementById('admin-pin-input');
-            if (adminInput) {
-                adminInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') checkAdminPin();
-                });
-            }
-
-            // Prüfen ob Startseite in dieser Session bereits entsperrt wurde
-            if (sessionStorage.getItem('luxevera_unlocked') === 'true') {
-                document.getElementById('pin-overlay').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
-                renderProducts();
-            } else {
-                document.getElementById('pin-overlay').style.display = 'flex';
-                document.getElementById('main-content').style.display = 'none';
-            }
-        });
-
-        // 1. Stufe Haupt-PIN prüfen
-        function checkMainPin() {
-            const input = document.getElementById('main-pin-input');
-            const entered = input ? input.value : '';
-            const error = document.getElementById('main-pin-error');
-
-            if (entered === MAIN_PIN) {
-                sessionStorage.setItem('luxevera_unlocked', 'true');
-                document.getElementById('pin-overlay').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
-                renderProducts();
-            } else {
-                if (error) error.style.display = 'block';
-                if (input) input.value = '';
-            }
-        }
-
-        // Management-Button geklickt -> IMMER erst Admin-PIN abfragen
-        function requestAdminAccess() {
-            const panel = document.getElementById('admin-panel');
-            
-            // Wenn das Panel bereits offen ist, schliessen
-            if (panel.style.display === 'block') {
-                panel.style.display = 'none';
-                return;
-            }
-
-            // Sonst immer das PIN-Modal für den Admin-Bereich anzeigen
-            document.getElementById('admin-pin-modal').style.display = 'flex';
-            const adminInput = document.getElementById('admin-pin-input');
-            if(adminInput) {
-                adminInput.value = '';
-                adminInput.focus();
-            }
-            document.getElementById('admin-pin-error').style.display = 'none';
-        }
-
-        function closeAdminPinModal() {
-            document.getElementById('admin-pin-modal').style.display = 'none';
-            document.getElementById('admin-pin-input').value = '';
-            document.getElementById('admin-pin-error').style.display = 'none';
-        }
-
-        // 2. Stufe Admin-PIN prüfen
-        function checkAdminPin() {
-            const input = document.getElementById('admin-pin-input');
-            const entered = input ? input.value : '';
-            const error = document.getElementById('admin-pin-error');
-
-            if (entered === ADMIN_PIN) {
-                closeAdminPinModal();
-                const panel = document.getElementById('admin-panel');
-                panel.style.display = 'block';
-                renderAdminList();
-            } else {
-                if (error) error.style.display = 'block';
-                if (input) input.value = '';
-            }
-        }
-
-        function renderProducts() {
-            const grid = document.getElementById('product-grid');
-            if (!grid) return;
-            grid.innerHTML = '';
-
-            if (products.length === 0) {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--accent-bronze); padding: 40px;">Keine Produkte vorhanden.</div>';
-                return;
-            }
-
-            products.forEach(product => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.setAttribute('data-category', product.category);
-
-                card.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}">
-                    <div class="card-body">
-                        <h2 class="card-title">${product.name}</h2>
-                        <div class="card-price">${product.price}</div>
-                        <p class="card-description">${product.description}</p>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        function renderAdminList() {
-            const listContainer = document.getElementById('admin-list-container');
-            if (!listContainer) return;
-            listContainer.innerHTML = '';
-
-            if (products.length === 0) {
-                listContainer.innerHTML = '<p style="font-size: 0.9rem; color: var(--accent-bronze);">Keine Einträge vorhanden.</p>';
-                return;
-            }
-
-            products.forEach(product => {
-                const item = document.createElement('div');
-                item.className = 'admin-product-item';
-                item.innerHTML = `
-                    <span>${product.name} (${product.price})</span>
-                    <button type="button" class="btn-danger" onclick="deleteProduct(${product.id})">Löschen</button>
-                `;
-                listContainer.appendChild(item);
-            });
-        }
-
-        function addProduct(event) {
-            event.preventDefault();
-
-            const name = document.getElementById('p-name').value;
-            const price = document.getElementById('p-price').value;
-            const category = document.getElementById('p-category').value;
-            const description = document.getElementById('p-desc').value;
-            const fileInput = document.getElementById('p-image');
-
-            if (fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const newProduct = {
-                        id: Date.now(),
-                        name: name,
-                        price: price,
-                        description: description,
-                        category: category,
-                        image: e.target.result
-                    };
-
-                    products.unshift(newProduct);
-                    saveAndRefresh();
-                    document.getElementById('product-form').reset();
-                    document.getElementById('admin-panel').style.display = 'none';
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            }
-        }
-
-        function deleteProduct(id) {
-            if (confirm("Möchten Sie diesen Eintrag wirklich löschen?")) {
-                products = products.filter(p => p.id !== id);
-                saveAndRefresh();
-            }
-        }
-
-        function saveAndRefresh() {
-            localStorage.setItem('luxevera_products', JSON.stringify(products));
-            renderProducts();
-            renderAdminList();
-        }
-
-        function filterCategory(category, event) {
-            const cards = document.querySelectorAll('.card');
-            const buttons = document.querySelectorAll('.filter-btn');
-
-            buttons.forEach(btn => btn.classList.remove('active'));
-            if(event) {
-                event.target.classList.add('active');
-            }
-
-            cards.forEach(card => {
-                if (category === 'all' || card.getAttribute('data-category') === category) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-    </script>
-</body>
-</html>
+        // Firebase Initialisieren (Falls Config gepflegt ist)
+        let db = null;
+        if (firebaseConfig.apiKey !== "DEIN_API_KEY") {
+            firebase.initializeApp(firebaseConfig);
