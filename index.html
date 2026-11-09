@@ -565,11 +565,11 @@
             </div>
         </div>
 
-        <!-- 3. Kacheln Navigation für Kategorien (Neues Bild für Angebote) -->
+        <!-- 3. Kacheln Navigation für Kategorien (Neues, helles Luxus-Bild für Angebote) -->
         <div id="category-tiles" class="category-tiles-container">
             <div class="category-tile offer-tile" onclick="openCategory('angebote', '🔥 Angebote der Woche')">
                 <span class="tile-badge">Special Deal</span>
-                <img src="https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&w=600&q=80" alt="Angebote">
+                <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80" alt="Angebote">
                 <div class="category-tile-overlay">
                     <div class="category-tile-title">Angebote der Woche</div>
                 </div>
@@ -658,7 +658,7 @@
                 renderProducts();
                 renderAdminList();
             })
-            .catch(err => console.error("Fehler beim Speichern:", err));
+            .catch(err => console.error("Fehler beim Speichern in der Cloud:", err));
         }
 
         function checkMainPin() {
@@ -762,6 +762,7 @@
             });
         }
 
+        // Produkt hinzufügen mit automatischer Bild-Komprimierung (verhindert Sync-Abbrüche bei großen Handy-Fotos)
         function addProduct(e) {
             e.preventDefault();
             const name = document.getElementById('p-name').value;
@@ -777,19 +778,50 @@
             if (fileInput.files && fileInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(evt) {
-                    const newProd = {
-                        id: Date.now().toString(),
-                        name: name,
-                        price: rawPrice,
-                        category: category,
-                        description: description,
-                        image: evt.target.result
-                    };
+                    const img = new Image();
+                    img.src = evt.target.result;
+                    img.onload = function() {
+                        // Bildgröße für den Cloud-Sync automatisch optimieren (max 800px Breite/Höhe)
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        const maxDim = 800;
 
-                    products.unshift(newProd);
-                    saveProductsToCloud();
-                    document.getElementById('product-form').reset();
-                    document.getElementById('admin-panel').style.display = 'none';
+                        if (width > height) {
+                            if (width > maxDim) {
+                                height *= maxDim / width;
+                                width = maxDim;
+                            }
+                        } else {
+                            if (height > maxDim) {
+                                width *= maxDim / height;
+                                height = maxDim;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Komprimiertes Bild als WebP/JPEG speichern
+                        const optimizedImageData = canvas.toDataURL('image/jpeg', 0.8);
+
+                        const newProd = {
+                            id: Date.now().toString(),
+                            name: name,
+                            price: rawPrice,
+                            category: category,
+                            description: description,
+                            image: optimizedImageData
+                        };
+
+                        products.unshift(newProd);
+                        saveProductsToCloud();
+                        document.getElementById('product-form').reset();
+                        document.getElementById('admin-panel').style.display = 'none';
+                        alert("Produkt erfolgreich hinzugefügt und live synchronisiert!");
+                    };
                 };
                 reader.readAsDataURL(fileInput.files[0]);
             }
