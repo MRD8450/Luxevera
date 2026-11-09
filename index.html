@@ -565,11 +565,11 @@
             </div>
         </div>
 
-        <!-- 3. Kacheln Navigation für Kategorien (Neues, helles Luxus-Bild für Angebote) -->
+        <!-- 3. Kacheln Navigation für Kategorien (Passendes, edles Shop-Schaufenster-Bild für Angebote) -->
         <div id="category-tiles" class="category-tiles-container">
             <div class="category-tile offer-tile" onclick="openCategory('angebote', '🔥 Angebote der Woche')">
                 <span class="tile-badge">Special Deal</span>
-                <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80" alt="Angebote">
+                <img src="https://images.unsplash.com/photo-1555529771-835f59fc5efe?auto=format&fit=crop&w=600&q=80" alt="Angebote">
                 <div class="category-tile-overlay">
                     <div class="category-tile-title">Angebote der Woche</div>
                 </div>
@@ -762,7 +762,7 @@
             });
         }
 
-        // Produkt hinzufügen mit automatischer Bild-Komprimierung (verhindert Sync-Abbrüche bei großen Handy-Fotos)
+        // Produkt hinzufügen mit automatischer Bild-Kompression (damit der JSONBin-Sync am Handy reibungslos funktioniert)
         function addProduct(e) {
             e.preventDefault();
             const name = document.getElementById('p-name').value;
@@ -781,7 +781,6 @@
                     const img = new Image();
                     img.src = evt.target.result;
                     img.onload = function() {
-                        // Bildgröße für den Cloud-Sync automatisch optimieren (max 800px Breite/Höhe)
                         const canvas = document.createElement('canvas');
                         let width = img.width;
                         let height = img.height;
@@ -804,7 +803,6 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        // Komprimiertes Bild als WebP/JPEG speichern
                         const optimizedImageData = canvas.toDataURL('image/jpeg', 0.8);
 
                         const newProd = {
