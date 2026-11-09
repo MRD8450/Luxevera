@@ -66,7 +66,7 @@
         .pin-box button {
             width: 100%; padding: 12px; background-color: var(--accent-bronze);
             color: #ffffff; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer;
-            pointer-events: auto !important; z-index: 10; position: relative;
+            pointer-events: auto !important;
         }
 
         .close-pin-btn { position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; }
@@ -161,36 +161,37 @@
 </head>
 <body>
 
+    <!-- Direktes HTML onclick eingebaut -->
     <div id="pin-overlay">
         <div class="pin-box">
             <h2>LUXEVERA</h2>
             <p>Bitte geben Sie den PIN-Code ein</p>
             <input type="password" id="main-pin-input" placeholder="••••" maxlength="6" autofocus>
-            <button type="button" id="main-submit-btn">Zugriff anfordern</button>
+            <button type="button" onclick="checkMainPin()">Zugriff anfordern</button>
             <div id="main-pin-error" class="pin-error">Falscher PIN-Code.</div>
         </div>
     </div>
 
     <div id="admin-pin-modal">
         <div class="pin-box">
-            <button class="close-pin-btn" type="button" id="close-admin-btn">×</button>
+            <button class="close-pin-btn" type="button" onclick="closeAdminPinModal()">×</button>
             <h2>Admin-Bereich</h2>
             <p>Admin-PIN eingeben</p>
             <input type="password" id="admin-pin-input" placeholder="••••" maxlength="6">
-            <button type="button" id="admin-submit-btn">Bestätigen</button>
+            <button type="button" onclick="checkAdminPin()">Bestätigen</button>
             <div id="admin-pin-error" class="pin-error">Falscher Admin-PIN.</div>
         </div>
     </div>
 
     <div id="main-content">
         <header>
-            <button class="admin-toggle-btn" type="button" id="admin-toggle-btn">⚙️ Management</button>
+            <button class="admin-toggle-btn" type="button" onclick="requestAdminAccess()">⚙️ Management</button>
             <img src="logo.png" alt="LUXEVERA Logo" class="logo-img">
         </header>
 
         <div id="admin-panel">
             <h3>Produkt-Management</h3>
-            <form id="product-form">
+            <form id="product-form" onsubmit="addProduct(event)">
                 <div class="form-group">
                     <label for="p-name">Produktname</label>
                     <input type="text" id="p-name" required placeholder="z. B. Royale Jasmin Parfüm">
@@ -212,4 +213,29 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="p-desc">Beschreibung
+                    <label for="p-desc">Beschreibung</label>
+                    <textarea id="p-desc" required placeholder="Edle Noten von..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="p-image">Produktbild auswählen (aus Galerie/Speicher)</label>
+                    <input type="file" id="p-image" accept="image/*" required>
+                </div>
+                <button type="submit" class="btn-primary" id="save-btn">Produkt hinzufügen</button>
+            </form>
+
+            <div class="admin-product-list">
+                <h4 style="margin-bottom: 15px;">Bestehende Produkte verwalten:</h4>
+                <div id="admin-list-container"></div>
+            </div>
+        </div>
+
+        <div id="category-tiles" class="category-tiles-container">
+            <div class="category-tile offer-tile" onclick="openCategory('angebote', '🔥 Angebote der Woche')">
+                <span class="tile-badge">Special Deal</span>
+                <img src="https://images.unsplash.com/photo-1555529771-835f59fc5efe?auto=format&fit=crop&w=600&q=80" alt="Angebote">
+                <div class="category-tile-overlay">
+                    <div class="category-tile-title">Angebote der Woche</div>
+                </div>
+            </div>
+            <div class="category-tile" onclick="openCategory('parfum', 'Parfüm')">
+                <img src="
