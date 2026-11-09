@@ -766,7 +766,6 @@
             e.preventDefault();
             const name = document.getElementById('p-name').value;
             let rawPrice = document.getElementById('p-price').value.trim();
-            // Automatisch sicherstellen, dass das €-Zeichen am Ende steht falls es vergessen wurde
             if (!rawPrice.endsWith('€')) {
                 rawPrice += ' €';
             }
