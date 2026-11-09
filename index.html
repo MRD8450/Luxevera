@@ -358,28 +358,17 @@
             .catch(err => console.error("Fehler beim Laden von Google:", err));
         }
 
-        function saveProductsToGoogle(successMessage = "Änderungen erfolgreich gespeichert!") {
+        function saveProductsToGoogle() {
             localStorage.setItem('luxevera_local_cache', JSON.stringify(products));
             renderProducts();
             renderAdminList();
-
-            const btn = document.getElementById('save-btn');
-            if(btn) btn.innerText = "Synchronisiere mit Google...";
 
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: "save", products: products })
-            })
-            .then(() => {
-                if(btn) btn.innerText = "Produkt hinzufügen";
-                alert(successMessage);
-            })
-            .catch(err => {
-                if(btn) btn.innerText = "Produkt hinzufügen";
-                console.error("Fehler beim Speichern:", err);
-            });
+            }).catch(err => console.error("Sync-Fehler:", err));
         }
 
         function openCategory(catKey, catTitle) {
@@ -499,9 +488,10 @@
                         };
 
                         products.unshift(newProd);
-                        saveProductsToGoogle("Produkt erfolgreich hinzugefügt und synchronisiert!");
+                        saveProductsToGoogle();
                         document.getElementById('product-form').reset();
                         document.getElementById('admin-panel').style.display = 'none';
+                        alert("Produkt erfolgreich hinzugefügt!");
                     };
                 };
                 reader.readAsDataURL(fileInput.files[0]);
@@ -511,7 +501,7 @@
         function deleteProduct(id) {
             if (confirm("Möchten Sie dieses Produkt wirklich löschen?")) {
                 products = products.filter(p => String(p.id) !== String(id));
-                saveProductsToGoogle("Produkt erfolgreich gelöscht und synchronisiert!");
+                saveProductsToGoogle();
             }
         }
     </script>
