@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LUXEVERA | Luxury Product Showcase</title>
 
-    <!-- App Icon für iOS / Android Home-Bildschirm & Browser-Favicon -->
     <link rel="apple-touch-icon" href="logo.png">
     <link rel="icon" type="image/png" href="logo.png">
 
@@ -35,466 +34,132 @@
             padding-bottom: 50px;
         }
 
-        /* 1. Stufe: Startseiten-PIN Overlay (2026) */
         #pin-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
+            display: flex; justify-content: center; align-items: center; z-index: 9999;
         }
 
-        /* 2. Stufe: Admin-PIN Modal (8888) */
         #admin-pin-modal {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(8px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: center; z-index: 10000;
         }
 
         .pin-box {
-            background: var(--card-bg);
-            backdrop-filter: blur(15px);
-            padding: 40px;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: var(--shadow);
-            text-align: center;
-            max-width: 380px;
-            width: 90%;
+            background: var(--card-bg); backdrop-filter: blur(15px); padding: 40px;
+            border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: var(--shadow); text-align: center; max-width: 380px; width: 90%;
             position: relative;
         }
 
-        .pin-box h2 {
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-            color: var(--text-dark);
-            text-transform: uppercase;
-        }
-
-        .pin-box p {
-            font-size: 0.9rem;
-            color: var(--accent-bronze);
-            margin-bottom: 20px;
-        }
-
+        .pin-box h2 { font-size: 1.5rem; letter-spacing: 2px; margin-bottom: 10px; text-transform: uppercase; }
+        .pin-box p { font-size: 0.9rem; color: var(--accent-bronze); margin-bottom: 20px; }
         .pin-box input {
-            width: 100%;
-            padding: 12px;
-            font-size: 1.2rem;
-            text-align: center;
-            letter-spacing: 5px;
-            border: 1px solid var(--accent-bronze);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.9);
-            color: var(--text-dark);
-            margin-bottom: 15px;
-            outline: none;
+            width: 100%; padding: 12px; font-size: 1.2rem; text-align: center;
+            letter-spacing: 5px; border: 1px solid var(--accent-bronze); border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9); margin-bottom: 15px; outline: none;
         }
 
         .pin-box button {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--accent-bronze);
-            color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: background 0.3s ease;
+            width: 100%; padding: 12px; background-color: var(--accent-bronze);
+            color: #ffffff; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer;
         }
 
-        .pin-box button:hover {
-            background-color: var(--text-dark);
-        }
+        .close-pin-btn { position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; }
+        .pin-error { color: #a94442; font-size: 0.85rem; margin-top: 10px; display: none; }
 
-        .close-pin-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: transparent;
-            border: none;
-            font-size: 1.2rem;
-            cursor: pointer;
-            color: var(--text-dark);
-        }
+        #main-content { display: none; }
 
-        .pin-error {
-            color: #a94442;
-            font-size: 0.85rem;
-            margin-top: 10px;
-            display: none;
-        }
-
-        #main-content {
-            display: none;
-        }
-
-        header {
-            text-align: center;
-            padding: 40px 20px 20px;
-            position: relative;
-        }
-
-        .logo-img {
-            max-width: 320px;
-            width: 100%;
-            height: auto;
-            margin-bottom: 10px;
-        }
+        header { text-align: center; padding: 40px 20px 20px; position: relative; }
+        .logo-img { max-width: 320px; width: 100%; height: auto; margin-bottom: 10px; }
 
         .admin-toggle-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: transparent;
-            border: 1px solid var(--accent-bronze);
-            color: var(--text-dark);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            position: absolute; top: 20px; right: 20px; background: transparent;
+            border: 1px solid var(--accent-bronze); color: var(--text-dark);
+            padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; cursor: pointer;
         }
 
-        .admin-toggle-btn:hover {
-            background: var(--accent-bronze);
-            color: #fff;
-        }
-
-        /* Kachel-Raster für Kategorien */
         .category-tiles-container {
-            max-width: 1000px;
-            margin: 30px auto;
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 25px;
+            max-width: 1000px; margin: 30px auto; padding: 0 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px;
         }
 
         .category-tile {
-            position: relative;
-            height: 220px;
-            border-radius: 16px;
-            overflow: hidden;
-            cursor: pointer;
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative; height: 220px; border-radius: 16px; overflow: hidden;
+            cursor: pointer; box-shadow: var(--shadow); border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: transform 0.3s ease;
         }
 
-        .category-tile:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18);
-        }
-
-        .category-tile img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-
-        .category-tile:hover img {
-            transform: scale(1.08);
-        }
-
+        .category-tile:hover { transform: translateY(-6px); }
+        .category-tile img { width: 100%; height: 100%; object-fit: cover; }
         .category-tile-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(to top, rgba(42, 33, 28, 0.85), rgba(0, 0, 0, 0.1));
-            display: flex;
-            align-items: flex-end;
-            padding: 20px;
+            display: flex; align-items: flex-end; padding: 20px;
         }
 
-        .category-tile-title {
-            color: #ffffff;
-            font-size: 1.3rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
-        }
-
-        .category-tile.offer-tile {
-            border: 2px solid var(--accent-gold-bright);
-        }
-
-        .category-tile.offer-tile .category-tile-overlay {
-            background: linear-gradient(to top, rgba(115, 89, 66, 0.9), rgba(212, 175, 55, 0.3));
-        }
+        .category-tile-title { color: #ffffff; font-size: 1.3rem; letter-spacing: 1px; text-transform: uppercase; font-weight: bold; }
+        .category-tile.offer-tile { border: 2px solid var(--accent-gold-bright); }
 
         .tile-badge {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: var(--accent-gold-bright);
-            color: #2a211c;
-            padding: 5px 12px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            position: absolute; top: 15px; left: 15px; background: var(--accent-gold-bright);
+            color: #2a211c; padding: 5px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;
         }
 
-        /* Zurück & Überschrift Navigation (Links ausgerichtet) */
         .back-nav {
-            max-width: 1100px;
-            margin: 20px auto 15px;
-            padding: 0 20px;
-            display: none;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 20px;
+            max-width: 1100px; margin: 20px auto 15px; padding: 0 20px; display: none;
+            align-items: center; justify-content: flex-start; gap: 20px;
         }
 
         .back-btn {
-            background: transparent;
-            border: 1px solid var(--accent-bronze);
-            color: var(--text-dark);
-            padding: 8px 18px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
+            background: transparent; border: 1px solid var(--accent-bronze); color: var(--text-dark);
+            padding: 8px 18px; border-radius: 20px; cursor: pointer;
         }
 
-        .back-btn:hover {
-            background: var(--accent-bronze);
-            color: #fff;
-        }
-
-        .active-cat-title {
-            font-size: 1.3rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--accent-bronze);
-            font-weight: bold;
-        }
+        .active-cat-title { font-size: 1.3rem; text-transform: uppercase; letter-spacing: 2px; color: var(--accent-bronze); font-weight: bold; }
 
         #admin-panel {
-            max-width: 800px;
-            margin: 0 auto 40px;
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            padding: 30px;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: var(--shadow);
-            display: none;
+            max-width: 800px; margin: 0 auto 40px; background: var(--card-bg);
+            backdrop-filter: blur(12px); padding: 30px; border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: var(--shadow); display: none;
         }
 
-        #admin-panel h3 {
-            margin-bottom: 20px;
-            font-size: 1.3rem;
-            color: var(--text-dark);
-            border-bottom: 1px solid rgba(115, 89, 66, 0.2);
-            padding-bottom: 10px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-            color: var(--accent-bronze);
-            font-weight: bold;
-        }
-
+        #admin-panel h3 { margin-bottom: 20px; font-size: 1.3rem; border-bottom: 1px solid rgba(115, 89, 66, 0.2); padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.9rem; margin-bottom: 5px; color: var(--accent-bronze); font-weight: bold; }
         .form-group input, .form-group textarea, .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--accent-bronze);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.9);
-            font-family: inherit;
-            font-size: 0.95rem;
-            color: var(--text-dark);
-            outline: none;
+            width: 100%; padding: 10px; border: 1px solid var(--accent-bronze); border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9); outline: none; font-family: inherit;
         }
 
-        .form-group textarea {
-            resize: vertical;
-            height: 80px;
-        }
+        .price-input-wrapper { position: relative; display: flex; align-items: center; }
+        .price-input-wrapper input { padding-right: 35px; }
+        .price-symbol { position: absolute; right: 15px; color: var(--accent-bronze); font-weight: bold; }
 
-        /* Preis-Input mit automatischem €-Symbol */
-        .price-input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
+        .btn-primary { background-color: var(--accent-bronze); color: #fff; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; }
+        .admin-product-list { margin-top: 30px; }
+        .admin-product-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.5); padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; }
+        .btn-danger { background-color: #a94442; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
 
-        .price-input-wrapper input {
-            padding-right: 35px;
-        }
+        #product-container { display: none; }
+        .grid-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+        
+        .card { background: var(--card-bg); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; position: relative; }
+        .card.special-offer-card { border: 2px solid var(--accent-gold-bright); }
+        .card img { width: 100%; height: 250px; object-fit: cover; }
+        .card-body { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
+        .card-title { font-size: 1.3rem; margin-bottom: 8px; }
+        .card-price { font-size: 1.1rem; font-weight: bold; color: var(--accent-bronze); margin-bottom: 12px; }
+        .card-description { font-size: 0.95rem; line-height: 1.5; color: #4a3f35; }
 
-        .price-symbol {
-            position: absolute;
-            right: 15px;
-            color: var(--accent-bronze);
-            font-weight: bold;
-            pointer-events: none;
-        }
-
-        .btn-primary {
-            background-color: var(--accent-bronze);
-            color: #fff;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            letter-spacing: 1px;
-            transition: background 0.3s ease;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--text-dark);
-        }
-
-        .admin-product-list {
-            margin-top: 30px;
-        }
-
-        .admin-product-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.5);
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border: 1px solid rgba(115, 89, 66, 0.1);
-        }
-
-        .admin-product-item span {
-            font-size: 0.95rem;
-            font-weight: bold;
-        }
-
-        .btn-danger {
-            background-color: #a94442;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .btn-danger:hover {
-            background-color: #843534;
-        }
-
-        #product-container {
-            display: none;
-        }
-
-        .grid-container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 30px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-        }
-
-        .card.special-offer-card {
-            border: 2px solid var(--accent-gold-bright);
-        }
-
-        .card img {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .card-body {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-        }
-
-        .card-title {
-            font-size: 1.3rem;
-            margin-bottom: 8px;
-            color: var(--text-dark);
-        }
-
-        .card-price {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--accent-bronze);
-            margin-bottom: 12px;
-        }
-
-        .card.special-offer-card .card-price {
-            color: #b8860b;
-        }
-
-        .card-description {
-            font-size: 0.95rem;
-            line-height: 1.5;
-            color: #4a3f35;
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 50px;
-            font-size: 0.85rem;
-            color: var(--accent-bronze);
-        }
+        footer { text-align: center; margin-top: 50px; font-size: 0.85rem; color: var(--accent-bronze); }
     </style>
 </head>
 <body>
 
-    <!-- 1. Stufe PIN Overlay (2026) -->
     <div id="pin-overlay">
         <div class="pin-box">
             <h2>LUXEVERA</h2>
@@ -505,7 +170,6 @@
         </div>
     </div>
 
-    <!-- 2. Stufe Admin PIN Modal (8888) -->
     <div id="admin-pin-modal">
         <div class="pin-box">
             <button class="close-pin-btn" onclick="closeAdminPinModal()">×</button>
@@ -517,14 +181,12 @@
         </div>
     </div>
 
-    <!-- Hauptinhalt -->
     <div id="main-content">
         <header>
             <button class="admin-toggle-btn" onclick="requestAdminAccess()">⚙️ Management</button>
             <img src="logo.png" alt="LUXEVERA Logo" class="logo-img">
         </header>
 
-        <!-- Admin Panel -->
         <div id="admin-panel">
             <h3>Produkt-Management</h3>
             <form id="product-form" onsubmit="addProduct(event)">
@@ -553,19 +215,18 @@
                     <textarea id="p-desc" required placeholder="Edle Noten von..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="p-image">Produktbild auswählen</label>
-                    <input type="file" id="p-image" accept="image/*" required>
+                    <label for="p-image">Bild-URL (z. B. Unsplash/Imgur)</label>
+                    <input type="text" id="p-image" required placeholder="https://images.unsplash.com/...">
                 </div>
-                <button type="submit" class="btn-primary">Produkt hinzufügen</button>
+                <button type="submit" class="btn-primary" id="save-btn">Produkt hinzufügen</button>
             </form>
 
             <div class="admin-product-list">
-                <h4 style="margin-bottom: 15px; color: var(--text-dark);">Bestehende Produkte verwalten:</h4>
+                <h4 style="margin-bottom: 15px;">Bestehende Produkte verwalten:</h4>
                 <div id="admin-list-container"></div>
             </div>
         </div>
 
-        <!-- 3. Kacheln Navigation für Kategorien (Passendes, edles Shop-Schaufenster-Bild für Angebote) -->
         <div id="category-tiles" class="category-tiles-container">
             <div class="category-tile offer-tile" onclick="openCategory('angebote', '🔥 Angebote der Woche')">
                 <span class="tile-badge">Special Deal</span>
@@ -594,7 +255,6 @@
             </div>
         </div>
 
-        <!-- Back Navigation & Produktübersicht (Links ausgerichtet) -->
         <div id="back-nav" class="back-nav">
             <button class="back-btn" onclick="showCategories()">← Kategorien</button>
             <div id="active-cat-title" class="active-cat-title">Kategorie</div>
@@ -628,7 +288,16 @@
                 document.getElementById('main-content').style.display = 'block';
             }
 
+            // Erst lokal laden als Sofort-Anzeige, dann Cloud abgleichen
+            const localData = localStorage.getItem('luxevera_local_cache');
+            if (localData) {
+                products = JSON.parse(localData);
+                renderProducts();
+                renderAdminList();
+            }
+
             loadProductsFromCloud();
+            setInterval(loadProductsFromCloud, 5000); // Alle 5 Sek. Auto-Sync mit Cloud
         });
 
         function loadProductsFromCloud() {
@@ -637,14 +306,25 @@
             })
             .then(res => res.json())
             .then(data => {
-                products = data.record || [];
-                renderProducts();
-                renderAdminList();
+                if (data.record && Array.isArray(data.record) && data.record.length > 0) {
+                    products = data.record;
+                    localStorage.setItem('luxevera_local_cache', JSON.stringify(products));
+                    renderProducts();
+                    renderAdminList();
+                }
             })
-            .catch(err => console.error("Fehler beim Laden:", err));
+            .catch(err => console.error("Cloud Ladefehler:", err));
         }
 
         function saveProductsToCloud() {
+            // Sofort lokal speichern, damit es direkt da bleibt
+            localStorage.setItem('luxevera_local_cache', JSON.stringify(products));
+            renderProducts();
+            renderAdminList();
+
+            const btn = document.getElementById('save-btn');
+            if(btn) btn.innerText = "Synchronisiere...";
+
             fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                 method: 'PUT',
                 headers: {
@@ -655,10 +335,13 @@
             })
             .then(res => res.json())
             .then(() => {
-                renderProducts();
-                renderAdminList();
+                if(btn) btn.innerText = "Produkt hinzufügen";
+                alert("Erfolgreich gespeichert und live synchronisiert!");
             })
-            .catch(err => console.error("Fehler beim Speichern in der Cloud:", err));
+            .catch(err => {
+                if(btn) btn.innerText = "Produkt hinzufügen";
+                alert("Lokal gespeichert, aber Cloud-Sync fehlgeschlagen: " + err);
+            });
         }
 
         function checkMainPin() {
@@ -762,7 +445,6 @@
             });
         }
 
-        // Produkt hinzufügen mit automatischer Bild-Kompression (damit der JSONBin-Sync am Handy reibungslos funktioniert)
         function addProduct(e) {
             e.preventDefault();
             const name = document.getElementById('p-name').value;
@@ -773,56 +455,21 @@
 
             const category = document.getElementById('p-category').value;
             const description = document.getElementById('p-desc').value;
-            const fileInput = document.getElementById('p-image');
+            const imageUrl = document.getElementById('p-image').value.trim();
 
-            if (fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    const img = new Image();
-                    img.src = evt.target.result;
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-                        const maxDim = 800;
+            const newProd = {
+                id: Date.now().toString(),
+                name: name,
+                price: rawPrice,
+                category: category,
+                description: description,
+                image: imageUrl
+            };
 
-                        if (width > height) {
-                            if (width > maxDim) {
-                                height *= maxDim / width;
-                                width = maxDim;
-                            }
-                        } else {
-                            if (height > maxDim) {
-                                width *= maxDim / height;
-                                height = maxDim;
-                            }
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-
-                        const optimizedImageData = canvas.toDataURL('image/jpeg', 0.8);
-
-                        const newProd = {
-                            id: Date.now().toString(),
-                            name: name,
-                            price: rawPrice,
-                            category: category,
-                            description: description,
-                            image: optimizedImageData
-                        };
-
-                        products.unshift(newProd);
-                        saveProductsToCloud();
-                        document.getElementById('product-form').reset();
-                        document.getElementById('admin-panel').style.display = 'none';
-                        alert("Produkt erfolgreich hinzugefügt und live synchronisiert!");
-                    };
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            }
+            products.unshift(newProd);
+            saveProductsToCloud();
+            document.getElementById('product-form').reset();
+            document.getElementById('admin-panel').style.display = 'none';
         }
 
         function deleteProduct(id) {
