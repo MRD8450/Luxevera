@@ -348,7 +348,7 @@
             fetch(GOOGLE_SCRIPT_URL)
             .then(res => res.json())
             .then(data => {
-                if (Array.isArray(data) && data.length > 0) {
+                if (Array.isArray(data)) {
                     products = data;
                     localStorage.setItem('luxevera_local_cache', JSON.stringify(products));
                     renderProducts();
@@ -358,7 +358,7 @@
             .catch(err => console.error("Fehler beim Laden von Google:", err));
         }
 
-        function saveProductsToGoogle() {
+        function saveProductsToGoogle(successMessage = "Änderungen erfolgreich gespeichert!") {
             localStorage.setItem('luxevera_local_cache', JSON.stringify(products));
             renderProducts();
             renderAdminList();
@@ -374,6 +374,7 @@
             })
             .then(() => {
                 if(btn) btn.innerText = "Produkt hinzufügen";
+                alert(successMessage);
             })
             .catch(err => {
                 if(btn) btn.innerText = "Produkt hinzufügen";
@@ -498,7 +499,7 @@
                         };
 
                         products.unshift(newProd);
-                        saveProductsToGoogle();
+                        saveProductsToGoogle("Produkt erfolgreich hinzugefügt und synchronisiert!");
                         document.getElementById('product-form').reset();
                         document.getElementById('admin-panel').style.display = 'none';
                     };
@@ -510,7 +511,7 @@
         function deleteProduct(id) {
             if (confirm("Möchten Sie dieses Produkt wirklich löschen?")) {
                 products = products.filter(p => String(p.id) !== String(id));
-                saveProductsToGoogle();
+                saveProductsToGoogle("Produkt erfolgreich gelöscht und synchronisiert!");
             }
         }
     </script>
