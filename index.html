@@ -374,7 +374,6 @@
             })
             .then(() => {
                 if(btn) btn.innerText = "Produkt hinzufügen";
-                alert("Erfolgreich gespeichert und synchronisiert!");
             })
             .catch(err => {
                 if(btn) btn.innerText = "Produkt hinzufügen";
@@ -431,11 +430,16 @@
             if (!container) return;
             container.innerHTML = '';
 
+            if (products.length === 0) {
+                container.innerHTML = '<div style="color: var(--accent-bronze); font-size: 0.9rem;">Keine Produkte vorhanden.</div>';
+                return;
+            }
+
             products.forEach(p => {
                 const item = document.createElement('div');
                 item.className = 'admin-product-item';
                 item.innerHTML = `
-                    <span>[${p.category.toUpperCase()}] ${p.name} (${p.price})</span>
+                    <span>[${String(p.category || '').toUpperCase()}] ${p.name} (${p.price})</span>
                     <button type="button" class="btn-danger" onclick="deleteProduct('${p.id}')">Löschen</button>
                 `;
                 container.appendChild(item);
@@ -485,7 +489,7 @@
                         const optimizedImageBase64 = canvas.toDataURL('image/jpeg', 0.65);
 
                         const newProd = {
-                            id: Date.now().toString(),
+                            id: String(Date.now()),
                             name: name,
                             price: rawPrice,
                             category: category,
@@ -504,8 +508,8 @@
         }
 
         function deleteProduct(id) {
-            if (confirm("Möchten Sie dieses Produkt löschen?")) {
-                products = products.filter(p => p.id !== id);
+            if (confirm("Möchten Sie dieses Produkt wirklich löschen?")) {
+                products = products.filter(p => String(p.id) !== String(id));
                 saveProductsToGoogle();
             }
         }
