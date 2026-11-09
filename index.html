@@ -160,30 +160,36 @@
 </head>
 <body>
 
+    <!-- PIN Overlay als Formular für Klick & Enter -->
     <div id="pin-overlay">
         <div class="pin-box">
             <h2>LUXEVERA</h2>
             <p>Bitte geben Sie den PIN-Code ein</p>
-            <input type="password" id="main-pin-input" placeholder="••••" maxlength="6">
-            <button type="button" onclick="checkMainPin()">Zugriff anfordern</button>
+            <form id="main-pin-form" onsubmit="checkMainPin(event)">
+                <input type="password" id="main-pin-input" placeholder="••••" maxlength="6" required autofocus>
+                <button type="submit">Zugriff anfordern</button>
+            </form>
             <div id="main-pin-error" class="pin-error">Falscher PIN-Code.</div>
         </div>
     </div>
 
+    <!-- Admin PIN Modal als Formular -->
     <div id="admin-pin-modal">
         <div class="pin-box">
-            <button class="close-pin-btn" onclick="closeAdminPinModal()">×</button>
+            <button class="close-pin-btn" type="button" onclick="closeAdminPinModal()">×</button>
             <h2>Admin-Bereich</h2>
             <p>Admin-PIN eingeben</p>
-            <input type="password" id="admin-pin-input" placeholder="••••" maxlength="6">
-            <button type="button" onclick="checkAdminPin()">Bestätigen</button>
+            <form id="admin-pin-form" onsubmit="checkAdminPin(event)">
+                <input type="password" id="admin-pin-input" placeholder="••••" maxlength="6" required>
+                <button type="submit">Bestätigen</button>
+            </form>
             <div id="admin-pin-error" class="pin-error">Falscher Admin-PIN.</div>
         </div>
     </div>
 
     <div id="main-content">
         <header>
-            <button class="admin-toggle-btn" onclick="requestAdminAccess()">⚙️ Management</button>
+            <button class="admin-toggle-btn" type="button" onclick="requestAdminAccess()">⚙️ Management</button>
             <img src="logo.png" alt="LUXEVERA Logo" class="logo-img">
         </header>
 
@@ -242,113 +248,4 @@
                 </div>
             </div>
             <div class="category-tile" onclick="openCategory('kosmetik', 'Kosmetik & Make-up')">
-                <img src="https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80" alt="Kosmetik">
-                <div class="category-tile-overlay">
-                    <div class="category-tile-title">Kosmetik</div>
-                </div>
-            </div>
-            <div class="category-tile" onclick="openCategory('accessoires', 'Accessoires')">
-                <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80" alt="Accessoires">
-                <div class="category-tile-overlay">
-                    <div class="category-tile-title">Accessoires</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="back-nav" class="back-nav">
-            <button class="back-btn" onclick="showCategories()">← Kategorien</button>
-            <div id="active-cat-title" class="active-cat-title">Kategorie</div>
-        </div>
-
-        <div id="product-container">
-            <main class="grid-container" id="product-grid"></main>
-        </div>
-
-        <footer>
-            <p>&copy; 2026 LUXEVERA. Alle Rechte vorbehalten.</p>
-        </footer>
-    </div>
-
-    <script>
-        const MAIN_PIN = "2026";
-        const ADMIN_PIN = "8888";
-
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVtkEgwnm6YF199D1N2EKoyZX5KRO1t2JSMHKtAUE8f1LJhI2BdKH1HfIEbY60HLGUmw/exec";
-
-        let products = [];
-        let activeCategory = 'all';
-
-        window.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('main-pin-input').addEventListener('keypress', e => { if (e.key === 'Enter') checkMainPin(); });
-            document.getElementById('admin-pin-input').addEventListener('keypress', e => { if (e.key === 'Enter') checkAdminPin(); });
-
-            if (sessionStorage.getItem('luxevera_unlocked') === 'true') {
-                document.getElementById('pin-overlay').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
-            }
-
-            const localData = localStorage.getItem('luxevera_local_cache');
-            if (localData) {
-                products = JSON.parse(localData);
-                renderProducts();
-                renderAdminList();
-            }
-
-            loadProductsFromGoogle();
-            setInterval(loadProductsFromGoogle, 5000);
-        });
-
-        function loadProductsFromGoogle() {
-            fetch(GOOGLE_SCRIPT_URL)
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data) && data.length > 0) {
-                    products = data;
-                    localStorage.setItem('luxevera_local_cache', JSON.stringify(products));
-                    renderProducts();
-                    renderAdminList();
-                }
-            })
-            .catch(err => console.error("Fehler beim Laden von Google:", err));
-        }
-
-        function saveProductsToGoogle() {
-            localStorage.setItem('luxevera_local_cache', JSON.stringify(products));
-            renderProducts();
-            renderAdminList();
-
-            const btn = document.getElementById('save-btn');
-            if(btn) btn.innerText = "Synchronisiere mit Google...";
-
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: "save", products: products })
-            })
-            .then(() => {
-                if(btn) btn.innerText = "Produkt hinzufügen";
-                alert("Erfolgreich gespeichert und synchronisiert!");
-            })
-            .catch(err => {
-                if(btn) btn.innerText = "Produkt hinzufügen";
-                console.error("Fehler beim Speichern:", err);
-            });
-        }
-
-        function checkMainPin() {
-            const val = document.getElementById('main-pin-input').value;
-            if (val === MAIN_PIN) {
-                sessionStorage.setItem('luxevera_unlocked', 'true');
-                document.getElementById('pin-overlay').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
-                loadProductsFromGoogle();
-            } else {
-                document.getElementById('main-pin-error').style.display = 'block';
-                document.getElementById('main-pin-input').value = '';
-            }
-        }
-
-        function requestAdminAccess() {
-            const panel = document.getElementById('admin-panel');
-            if (panel
+                <img src="
