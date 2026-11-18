@@ -74,7 +74,7 @@
         .close-pin-btn { position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; }
         .pin-error { color: #a94442; font-size: 0.85rem; margin-top: 10px; display: none; }
 
-        #main-content { display: none; }
+        #main-content { display: block; }
 
         header { text-align: center; padding: 40px 20px 20px; position: relative; }
         .logo-img { max-width: 320px; width: 100%; height: auto; margin-bottom: 10px; }
@@ -210,4 +210,168 @@
         }
 
         .screensaver-logo {
-            max-width:
+            max-width: 320px;
+            width: 80%;
+            height: auto;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+            animation: pulseLogo 3s infinite ease-in-out;
+        }
+
+        .screensaver-text {
+            color: var(--accent-gold-bright);
+            font-size: 1.2rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            font-family: 'Georgia', serif;
+            opacity: 0.9;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        @keyframes pulseLogo {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+            100% { transform: scale(1); }
+        }
+
+        footer { text-align: center; margin-top: 50px; font-size: 0.85rem; color: var(--accent-bronze); }
+    </style>
+</head>
+<body>
+
+    <div id="pin-overlay">
+        <div class="pin-box">
+            <h2>LUXEVERA</h2>
+            <p>Bitte geben Sie den PIN-Code ein</p>
+            <input type="password" id="main-pin-input" placeholder="••••" maxlength="6" autofocus>
+            <button type="button" id="main-pin-btn" onclick="checkMainPin()">Zugriff anfordern</button>
+            <div id="main-pin-error" class="pin-error">Falscher PIN-Code.</div>
+        </div>
+    </div>
+
+    <div id="admin-pin-modal">
+        <div class="pin-box">
+            <button class="close-pin-btn" type="button" id="close-admin-modal-btn">×</button>
+            <h2>Admin-Bereich</h2>
+            <p>Admin-PIN eingeben</p>
+            <input type="password" id="admin-pin-input" placeholder="••••" maxlength="6">
+            <button type="button" id="admin-pin-btn" onclick="checkAdminPin()">Bestätigen</button>
+            <div id="admin-pin-error" class="pin-error">Falscher Admin-PIN.</div>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <header>
+            <button class="admin-toggle-btn" type="button" id="admin-toggle-action-btn">⚙️ Management</button>
+            <img src="logo.png" alt="LUXEVERA Logo" class="logo-img">
+        </header>
+
+        <div id="admin-panel">
+            <h3 id="form-title">Produkt-Management (Neues Produkt)</h3>
+            <form id="product-form" onsubmit="handleFormSubmit(event)">
+                <input type="hidden" id="edit-id" value="">
+                <div class="form-group">
+                    <label for="p-name">Produktname</label>
+                    <input type="text" id="p-name" required placeholder="z. B. Royale Jasmin Parfüm">
+                </div>
+                <div class="form-group">
+                    <label for="p-price">Preis</label>
+                    <div class="price-input-wrapper">
+                        <input type="text" id="p-price" required placeholder="195,00">
+                        <span class="price-symbol">€</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="p-category">Kategorie</label>
+                    <select id="p-category">
+                        <option value="parfum">Parfüm (Special Deal)</option>
+                        <option value="kosmetik">Kosmetik & Make-up</option>
+                        <option value="accessoires">Accessoires & Brillen</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="p-desc">Beschreibung</label>
+                    <textarea id="p-desc" required placeholder="Edle Noten von..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="p-image">Produktbild auswählen (aus Galerie/Speicher)</label>
+                    <input type="file" id="p-image" accept="image/*">
+                    <small style="color: var(--accent-bronze); display:block; margin-top:5px;" id="img-hint">Beim Bearbeiten optional (bleibt sonst unverändert).</small>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn-primary" id="save-btn">Produkt hinzufügen</button>
+                    <button type="button" class="btn-danger" id="cancel-edit-btn" style="display:none;" onclick="cancelEdit()">Abbrechen</button>
+                </div>
+            </form>
+
+            <div class="admin-product-list">
+                <h4 style="margin-bottom: 15px;">Bestehende Produkte verwalten:</h4>
+                <div class="admin-controls-bar">
+                    <select id="admin-filter-select" onchange="renderAdminList()">
+                        <option value="all">🔍 Filter: Alle Kategorien</option>
+                        <option value="parfum">Parfüm</option>
+                        <option value="kosmetik">Kosmetik & Make-up</option>
+                        <option value="accessoires">Accessoires</option>
+                    </select>
+                    <select id="admin-sort-select" onchange="renderAdminList()">
+                        <option value="newest">↕️ Sortierung: Neueste zuerst</option>
+                        <option value="name">↕️ Sortierung: Name (A-Z)</option>
+                        <option value="category">↕️ Sortierung: Kategorie</option>
+                    </select>
+                </div>
+                <div id="admin-list-container"></div>
+            </div>
+        </div>
+
+        <div id="category-tiles" class="category-tiles-container">
+            <div class="category-tile offer-tile" onclick="openCategory('parfum', 'Parfüm')">
+                <span class="tile-badge">Special Deal</span>
+                <img src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80" alt="Parfüm">
+                <div class="category-tile-overlay">
+                    <div class="category-tile-title">Parfüm</div>
+                </div>
+            </div>
+            <div class="category-tile" onclick="openCategory('kosmetik', 'Kosmetik & Make-up')">
+                <img src="https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80" alt="Kosmetik">
+                <div class="category-tile-overlay">
+                    <div class="category-tile-title">Kosmetik</div>
+                </div>
+            </div>
+            <div class="category-tile" onclick="openCategory('accessoires', 'Accessoires')">
+                <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80" alt="Accessoires">
+                <div class="category-tile-overlay">
+                    <div class="category-tile-title">Accessoires</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="back-nav" class="back-nav">
+            <button class="back-btn" type="button" onclick="showCategories()">← Kategorien</button>
+            <div id="active-cat-title" class="active-cat-title">Kategorie</div>
+        </div>
+
+        <div id="product-container">
+            <main class="grid-container" id="product-grid"></main>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 LUXEVERA. Alle Rechte vorbehalten.</p>
+        </footer>
+    </div>
+
+    <!-- Bildschirmschoner mit Diashow -->
+    <div id="screensaver" onclick="resetScreensaverTimer()">
+        <div class="screensaver-slide active" style="background-image: url('https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="screensaver-slide" style="background-image: url('https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="screensaver-slide" style="background-image: url('https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1200&q=80');"></div>
+
+        <div class="screensaver-content">
+            <img src="logo.png" alt="LUXEVERA" class="screensaver-logo">
+            <div class="screensaver-text">Entdecken Sie den Luxus</div>
+        </div>
+    </div>
+
+    <script>
+        const MAIN_PIN = "2026";
+        const ADMIN_PIN = "8888";
+        const GOOGLE_SCRIPT_URL = "
