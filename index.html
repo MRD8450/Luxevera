@@ -374,7 +374,7 @@
     <script>
         const MAIN_PIN = "2026";
         const ADMIN_PIN = "8888";
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYCMQIgPGeaCXfl6_m8zdqQ6e97lrJLpGv_dRWteTzyl5cA5H39l9yBRjxKaeeFCwsJw/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwwCkCAp2HqNlyx9trTlnL3dB6asAswP7J6yypD9RjCPZniAv3Yzt_QEet3-3kF1zuvQQ/exec";
 
         let products = [];
         let activeCategory = 'all';
@@ -396,14 +396,8 @@
                 document.getElementById('main-content').style.display = 'block';
             }
 
-            const localData = localStorage.getItem('luxevera_local_cache');
-            if (localData) {
-                products = JSON.parse(localData);
-                ensureEuroSigns();
-                renderProducts();
-                renderAdminList();
-            }
-
+            // Alten Cache verwerfen, damit direkt von Google geladen wird
+            localStorage.removeItem('luxevera_local_cache');
             loadProductsFromGoogle();
             setInterval(loadProductsFromGoogle, 5000);
         });
@@ -462,7 +456,7 @@
             fetch(GOOGLE_SCRIPT_URL)
             .then(res => res.json())
             .then(data => {
-                if (Array.isArray(data) && data.length > 0) {
+                if (Array.isArray(data)) {
                     products = data;
                     ensureEuroSigns();
                     localStorage.setItem('luxevera_local_cache', JSON.stringify(products));
