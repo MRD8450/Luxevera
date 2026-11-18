@@ -372,7 +372,7 @@
             fetch(GOOGLE_SCRIPT_URL)
             .then(res => res.json())
             .then(data => {
-                if (Array.isArray(data)) {
+                if (Array.isArray(data) && data.length > 0) {
                     products = data;
                     localStorage.setItem('luxevera_local_cache', JSON.stringify(products));
                     renderProducts();
@@ -575,14 +575,25 @@
         }
 
         function startEdit(id) {
-            const p = products.find(item => String(item.id) === String(id));
-            if (!p) return;
+            // Sucht primär im Array oder holt zur Not die Daten aus dem Cache/Storage
+            let p = products.find(item => String(item.id) === String(id));
+            if (!p) {
+                const cached = localStorage.getItem('luxevera_local_cache');
+                if (cached) {
+                    products = JSON.parse(cached);
+                    p = products.find(item => String(item.id) === String(id));
+                }
+            }
+
+            if (!p) {
+                alert("Fehler: Produkt nicht gefunden.");
+                return;
+            }
 
             document.getElementById('edit-id').value = p.id;
-            document.getElementById('p-name').value = p.name;
-            // Preis sauber bereinigen (stellt sicher, dass z.B. "195,00 €" als reine Zahl "195,00" im Input landet)
+            document.getElementById('p-name').value = p.name || '';
             document.getElementById('p-price').value = p.price ? p.price.replace('€', '').trim() : '';
-            document.getElementById('p-category').value = p.category;
+            document.getElementById('p-category').value = p.category || 'parfum';
             document.getElementById('p-desc').value = p.description || '';
             document.getElementById('p-image').value = "";
 
