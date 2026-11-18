@@ -680,3 +680,107 @@
                         category: document.getElementById('p-category').value,
                         description: document.getElementById('p-desc').value,
                         image: optimizedImageBase64,
+                        hidden: false
+                    };
+                    products.unshift(newProd);
+                    saveProductsToGoogle();
+                    resetForm();
+                    alert("Produkt erfolgreich hinzugefügt!");
+                }
+            };
+        }
+
+        function startEdit(id) {
+            const cached = localStorage.getItem('luxevera_local_cache');
+            if (cached) {
+                products = JSON.parse(cached);
+            }
+
+            const p = products.find(item => String(item.id || item.ID || item.Id) === String(id));
+            if (!p) {
+                alert("Fehler: Produkt mit ID " + id + " wurde nicht gefunden.");
+                return;
+            }
+
+            const prodName = p.name || p.Name || '';
+            let prodPrice = p.price || p.Price || p.preis || '';
+            const prodCategory = p.category || p.Category || 'parfum';
+            const prodDesc = p.description || p.Description || p.beschreibung || '';
+
+            prodPrice = String(prodPrice).replace(/€/g, '').trim();
+
+            document.getElementById('edit-id').value = p.id || p.ID || id;
+            document.getElementById('p-name').value = prodName;
+            document.getElementById('p-price').value = prodPrice;
+            document.getElementById('p-category').value = prodCategory;
+            document.getElementById('p-desc').value = prodDesc;
+            document.getElementById('p-image').value = "";
+
+            document.getElementById('form-title').innerText = "Produkt bearbeiten";
+            document.getElementById('save-btn').innerText = "Änderungen speichern";
+            document.getElementById('cancel-edit-btn').style.display = "inline-block";
+
+            document.getElementById('admin-panel').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            resetForm();
+        }
+
+        function resetForm() {
+            document.getElementById('product-form').reset();
+            document.getElementById('edit-id').value = "";
+            document.getElementById('form-title').innerText = "Produkt-Management (Neues Produkt)";
+            document.getElementById('save-btn').innerText = "Produkt hinzufügen";
+            document.getElementById('cancel-edit-btn').style.display = "none";
+        }
+
+        function deleteProduct(id) {
+            if (confirm("Möchten Sie dieses Produkt wirklich löschen?")) {
+                products = products.filter(p => String(p.id || p.ID || p.Id) !== String(id));
+                saveProductsToGoogle();
+            }
+        }
+
+        let screensaverTimer;
+        let slideInterval;
+        const IDLE_TIME_LIMIT = 120000;
+
+        function resetScreensaverTimer() {
+            const saver = document.getElementById('screensaver');
+            if (saver.classList.contains('active')) {
+                saver.classList.remove('active');
+                clearInterval(slideInterval);
+            }
+            clearTimeout(screensaverTimer);
+            screensaverTimer = setTimeout(showScreensaver, IDLE_TIME_LIMIT);
+        }
+
+        function showScreensaver() {
+            const saver = document.getElementById('screensaver');
+            saver.classList.add('active');
+            startSlideShow();
+        }
+
+        function startSlideShow() {
+            const slides = document.querySelectorAll('.screensaver-slide');
+            let currentSlide = 0;
+
+            clearInterval(slideInterval);
+            slideInterval = setInterval(() => {
+                slides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide + 1) % slides.length;
+                slides[currentSlide].classList.add('active');
+            }, 4000);
+        }
+
+        window.addEventListener('mousemove', resetScreensaverTimer);
+        window.addEventListener('mousedown', resetScreensaverTimer);
+        window.addEventListener('keypress', resetScreensaverTimer);
+        window.addEventListener('touchstart', resetScreensaverTimer);
+        window.addEventListener('scroll', resetScreensaverTimer);
+
+        resetScreensaverTimer();
+    </script>
+</body>
+</html>
