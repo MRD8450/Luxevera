@@ -66,6 +66,7 @@
         .pin-box button {
             width: 100%; padding: 12px; background-color: var(--accent-bronze);
             color: #ffffff; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer;
+            pointer-events: auto !important;
         }
 
         .pin-box button:hover { background-color: #5a4433; }
@@ -173,25 +174,25 @@
             <h2>LUXEVERA</h2>
             <p>Bitte geben Sie den PIN-Code ein</p>
             <input type="password" id="main-pin-input" placeholder="••••" maxlength="6" autofocus>
-            <button type="button" onclick="checkMainPin()">Zugriff anfordern</button>
+            <button type="button" id="main-pin-btn">Zugriff anfordern</button>
             <div id="main-pin-error" class="pin-error">Falscher PIN-Code.</div>
         </div>
     </div>
 
     <div id="admin-pin-modal">
         <div class="pin-box">
-            <button class="close-pin-btn" type="button" onclick="closeAdminPinModal()">×</button>
+            <button class="close-pin-btn" type="button" id="close-admin-modal-btn">×</button>
             <h2>Admin-Bereich</h2>
             <p>Admin-PIN eingeben</p>
             <input type="password" id="admin-pin-input" placeholder="••••" maxlength="6">
-            <button type="button" onclick="checkAdminPin()">Bestätigen</button>
+            <button type="button" id="admin-pin-btn">Bestätigen</button>
             <div id="admin-pin-error" class="pin-error">Falscher Admin-PIN.</div>
         </div>
     </div>
 
     <div id="main-content">
         <header>
-            <button class="admin-toggle-btn" type="button" onclick="requestAdminAccess()">⚙️ Management</button>
+            <button class="admin-toggle-btn" type="button" id="admin-toggle-action-btn">⚙️ Management</button>
             <img src="logo.png" alt="LUXEVERA Logo" class="logo-img">
         </header>
 
@@ -235,7 +236,6 @@
 
             <div class="admin-product-list">
                 <h4 style="margin-bottom: 15px;">Bestehende Produkte verwalten:</h4>
-                <!-- Filter und Sortier-Leiste -->
                 <div class="admin-controls-bar">
                     <select id="admin-filter-select" onchange="renderAdminList()">
                         <option value="all">🔍 Filter: Alle Kategorien</option>
@@ -298,12 +298,18 @@
         let activeCategory = 'all';
 
         window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('main-pin-btn').addEventListener('click', checkMainPin);
             document.getElementById('main-pin-input').addEventListener('keydown', e => {
                 if (e.key === 'Enter') checkMainPin();
             });
+
+            document.getElementById('admin-pin-btn').addEventListener('click', checkAdminPin);
             document.getElementById('admin-pin-input').addEventListener('keydown', e => {
                 if (e.key === 'Enter') checkAdminPin();
             });
+
+            document.getElementById('close-admin-modal-btn').addEventListener('click', closeAdminPinModal);
+            document.getElementById('admin-toggle-action-btn').addEventListener('click', requestAdminAccess);
 
             if (sessionStorage.getItem('luxevera_unlocked') === 'true') {
                 document.getElementById('pin-overlay').style.display = 'none';
@@ -443,16 +449,14 @@
                 return;
             }
 
-            // 1. FILTER anwenden
             const filterVal = document.getElementById('admin-filter-select').value;
             let displayList = products;
             if (filterVal !== 'all') {
                 displayList = products.filter(p => p.category === filterVal);
             }
 
-            // 2. SORTIERUNG anwenden
             const sortVal = document.getElementById('admin-sort-select').value;
-            displayList = [...displayList]; // Kopie erstellen zum Sortieren
+            displayList = [...displayList];
 
             if (sortVal === 'newest') {
                 displayList.sort((a, b) => Number(b.id) - Number(a.id));
@@ -576,9 +580,10 @@
 
             document.getElementById('edit-id').value = p.id;
             document.getElementById('p-name').value = p.name;
-            document.getElementById('p-price').value = p.price.replace(' €', '').trim();
+            // Preis sauber bereinigen (stellt sicher, dass z.B. "195,00 €" als reine Zahl "195,00" im Input landet)
+            document.getElementById('p-price').value = p.price ? p.price.replace('€', '').trim() : '';
             document.getElementById('p-category').value = p.category;
-            document.getElementById('p-desc').value = p.description;
+            document.getElementById('p-desc').value = p.description || '';
             document.getElementById('p-image').value = "";
 
             document.getElementById('form-title').innerText = "Produkt bearbeiten";
