@@ -144,13 +144,15 @@
 
         .btn-primary { background-color: var(--accent-bronze); color: #fff; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; }
         .btn-secondary { background-color: var(--accent-gold); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-right: 5px; }
+        .btn-toggle { background-color: #555; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-right: 5px; }
+        .btn-toggle.hidden-state { background-color: #b8860b; }
         
         .admin-controls-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
         .admin-controls-bar select { flex: 1; min-width: 180px; padding: 10px; border: 1px solid var(--accent-bronze); border-radius: 8px; background: rgba(255, 255, 255, 0.9); outline: none; }
 
         .admin-product-list { margin-top: 30px; }
         .admin-product-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.5); padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; }
-        .admin-actions { display: flex; gap: 5px; }
+        .admin-actions { display: flex; gap: 5px; align-items: center; }
         .btn-danger { background-color: #a94442; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
 
         #product-container { display: none; }
@@ -163,6 +165,74 @@
         .card-title { font-size: 1.3rem; margin-bottom: 8px; }
         .card-price { font-size: 1.1rem; font-weight: bold; color: var(--accent-bronze); margin-bottom: 12px; }
         .card-description { font-size: 0.95rem; line-height: 1.5; color: #4a3f35; }
+
+        /* Bildschirmschoner Diashow CSS */
+        #screensaver {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(20, 16, 13, 0.98);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999999;
+            cursor: none;
+            overflow: hidden;
+        }
+
+        #screensaver.active {
+            display: flex;
+        }
+
+        .screensaver-slide {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            filter: brightness(0.4) blur(4px);
+            transition: opacity 1.5s ease-in-out, transform 6s ease-in-out;
+            transform: scale(1);
+        }
+
+        .screensaver-slide.active {
+            opacity: 1;
+            transform: scale(1.08);
+        }
+
+        .screensaver-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .screensaver-logo {
+            max-width: 320px;
+            width: 80%;
+            height: auto;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+            animation: pulseLogo 3s infinite ease-in-out;
+        }
+
+        .screensaver-text {
+            color: var(--accent-gold-bright);
+            font-size: 1.2rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            font-family: 'Georgia', serif;
+            opacity: 0.9;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        @keyframes pulseLogo {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+            100% { transform: scale(1); }
+        }
 
         footer { text-align: center; margin-top: 50px; font-size: 0.85rem; color: var(--accent-bronze); }
     </style>
@@ -287,6 +357,18 @@
         <footer>
             <p>&copy; 2026 LUXEVERA. Alle Rechte vorbehalten.</p>
         </footer>
+    </div>
+
+    <!-- Bildschirmschoner mit Diashow -->
+    <div id="screensaver" onclick="resetScreensaverTimer()">
+        <div class="screensaver-slide active" style="background-image: url('https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="screensaver-slide" style="background-image: url('https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="screensaver-slide" style="background-image: url('https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1200&q=80');"></div>
+
+        <div class="screensaver-content">
+            <img src="logo.png" alt="LUXEVERA" class="screensaver-logo">
+            <div class="screensaver-text">Entdecken Sie den Luxus</div>
+        </div>
     </div>
 
     <script>
@@ -415,7 +497,12 @@
             if (!grid) return;
             grid.innerHTML = '';
 
-            const filtered = products.filter(p => (p.category || p.Category || '').toLowerCase() === activeCategory.toLowerCase());
+            // Zeige nur Produkte, die zur aktiven Kategorie gehören UND nicht ausgeblendet sind (hidden !== true)
+            const filtered = products.filter(p => {
+                const cat = (p.category || p.Category || '').toLowerCase();
+                const isHidden = p.hidden === true || p.hidden === "true";
+                return cat === activeCategory.toLowerCase() && !isHidden;
+            });
 
             if (filtered.length === 0) {
                 grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--accent-bronze); padding: 40px;">In dieser Kategorie befinden sich aktuell keine Produkte.</div>';
@@ -477,12 +564,14 @@
                 const prodCat = (p.category || p.Category || '').toUpperCase();
                 const prodName = p.name || p.Name;
                 const prodPrice = p.price || p.Price;
+                const isHidden = p.hidden === true || p.hidden === "true";
 
                 const item = document.createElement('div');
                 item.className = 'admin-product-item';
                 item.innerHTML = `
-                    <span>[${prodCat}] ${prodName} (${prodPrice})</span>
+                    <span>[${prodCat}] ${prodName} (${prodPrice}) ${isHidden ? '<strong style="color:#b8860b;">(Ausgeblendet)</strong>' : ''}</span>
                     <div class="admin-actions">
+                        <button type="button" class="btn-toggle ${isHidden ? 'hidden-state' : ''}" onclick="toggleProductVisibility('${prodId}')">${isHidden ? 'Einblenden' : 'Ausblenden'}</button>
                         <button type="button" class="btn-secondary" onclick="startEdit('${prodId}')">Bearbeiten</button>
                         <button type="button" class="btn-danger" onclick="deleteProduct('${prodId}')">Löschen</button>
                     </div>
@@ -491,14 +580,25 @@
             });
         }
 
+        // Produkt ein- und ausblenden
+        function toggleProductVisibility(id) {
+            const p = products.find(item => String(item.id || item.ID || item.Id) === String(id));
+            if (p) {
+                const currentHidden = p.hidden === true || p.hidden === "true";
+                p.hidden = !currentHidden;
+                saveProductsToGoogle();
+            }
+        }
+
         function handleFormSubmit(e) {
             e.preventDefault();
             const editId = document.getElementById('edit-id').value;
             const name = document.getElementById('p-name').value;
-            let rawPrice = document.getElementById('p-price').value.trim();
-            if (!rawPrice.endsWith('€')) {
-                rawPrice += ' €';
-            }
+            
+            // Preis bereinigen und immer sicher mit " €" versehen
+            let rawPrice = document.getElementById('p-price').value.replace('€', '').trim();
+            const finalPrice = rawPrice + ' €';
+
             const category = document.getElementById('p-category').value;
             const description = document.getElementById('p-desc').value;
             const fileInput = document.getElementById('p-image');
@@ -507,7 +607,7 @@
                 const prod = products.find(p => String(p.id || p.ID || p.Id) === String(editId));
                 if (prod) {
                     prod.name = name;
-                    prod.price = rawPrice;
+                    prod.price = finalPrice;
                     prod.category = category;
                     prod.description = description;
 
@@ -525,113 +625,4 @@
                 }
             } else {
                 if (fileInput.files && fileInput.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(evt) {
-                        processImageAndSave(evt.target.result, null, false);
-                    };
-                    reader.readAsDataURL(fileInput.files[0]);
-                } else {
-                    alert("Bitte wählen Sie ein Bild aus.");
-                }
-            }
-        }
-
-        function processImageAndSave(dataUrl, existingProd, isUpdate) {
-            const img = new Image();
-            img.src = dataUrl;
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                const maxDim = 500;
-
-                if (width > height) {
-                    if (width > maxDim) { height *= maxDim / width; width = maxDim; }
-                } else {
-                    if (height > maxDim) { width *= maxDim / height; height = maxDim; }
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                const optimizedImageBase64 = canvas.toDataURL('image/jpeg', 0.65);
-
-                if (isUpdate && existingProd) {
-                    existingProd.image = optimizedImageBase64;
-                    saveProductsToGoogle();
-                    resetForm();
-                    alert("Produkt inklusive Bild erfolgreich aktualisiert!");
-                } else {
-                    const newProd = {
-                        id: String(Date.now()),
-                        name: document.getElementById('p-name').value,
-                        price: document.getElementById('p-price').value.trim() + (document.getElementById('p-price').value.endsWith('€') ? '' : ' €'),
-                        category: document.getElementById('p-category').value,
-                        description: document.getElementById('p-desc').value,
-                        image: optimizedImageBase64
-                    };
-                    products.unshift(newProd);
-                    saveProductsToGoogle();
-                    resetForm();
-                    alert("Produkt erfolgreich hinzugefügt!");
-                }
-            };
-        }
-
-        function startEdit(id) {
-            const cached = localStorage.getItem('luxevera_local_cache');
-            if (cached) {
-                products = JSON.parse(cached);
-            }
-
-            const p = products.find(item => String(item.id || item.ID || item.Id) === String(id));
-            if (!p) {
-                alert("Fehler: Produkt mit ID " + id + " wurde nicht gefunden.");
-                return;
-            }
-
-            // Direktes Auslesen der Werte mit absolut sicheren Fallbacks
-            const prodName = p.name || p.Name || '';
-            let prodPrice = p.price || p.Price || p.preis || '';
-            const prodCategory = p.category || p.Category || 'parfum';
-            const prodDesc = p.description || p.Description || p.beschreibung || '';
-
-            prodPrice = String(prodPrice).replace('€', '').trim();
-
-            document.getElementById('edit-id').value = p.id || p.ID || id;
-            document.getElementById('p-name').value = prodName;
-            document.getElementById('p-price').value = prodPrice;
-            document.getElementById('p-category').value = prodCategory;
-            document.getElementById('p-desc').value = prodDesc;
-            document.getElementById('p-image').value = "";
-
-            document.getElementById('form-title').innerText = "Produkt bearbeiten";
-            document.getElementById('save-btn').innerText = "Änderungen speichern";
-            document.getElementById('cancel-edit-btn').style.display = "inline-block";
-
-            document.getElementById('admin-panel').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function cancelEdit() {
-            resetForm();
-        }
-
-        function resetForm() {
-            document.getElementById('product-form').reset();
-            document.getElementById('edit-id').value = "";
-            document.getElementById('form-title').innerText = "Produkt-Management (Neues Produkt)";
-            document.getElementById('save-btn').innerText = "Produkt hinzufügen";
-            document.getElementById('cancel-edit-btn').style.display = "none";
-        }
-
-        function deleteProduct(id) {
-            if (confirm("Möchten Sie dieses Produkt wirklich löschen?")) {
-                products = products.filter(p => String(p.id || p.ID || p.Id) !== String(id));
-                saveProductsToGoogle();
-            }
-        }
-    </script>
-</body>
-</html>
+                    const
