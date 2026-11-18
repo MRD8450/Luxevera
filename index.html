@@ -374,7 +374,7 @@
     <script>
         const MAIN_PIN = "2026";
         const ADMIN_PIN = "8888";
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVtkEgwnm6YF199D1N2EKoyZX5KRO1t2JSMHKtAUE8f1LJhI2BdKH1HfIEbY60HLGUmw/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYCMQIgPGeaCXfl6_m8zdqQ6e97lrJLpGv_dRWteTzyl5cA5H39l9yBRjxKaeeFCwsJw/exec";
 
         let products = [];
         let activeCategory = 'all';
@@ -408,7 +408,6 @@
             setInterval(loadProductsFromGoogle, 5000);
         });
 
-        // Hilfsfunktion: Garantiert, dass jede Preisanzeige IMMER ein € enthält
         function ensureEuroSigns() {
             products.forEach(p => {
                 let pr = String(p.price || p.Price || p.preis || '').trim();
@@ -465,7 +464,7 @@
             .then(data => {
                 if (Array.isArray(data) && data.length > 0) {
                     products = data;
-                    ensureEuroSigns(); // Direkt beim Laden absichern
+                    ensureEuroSigns();
                     localStorage.setItem('luxevera_local_cache', JSON.stringify(products));
                     renderProducts();
                     renderAdminList();
