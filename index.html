@@ -426,4 +426,186 @@
                     <div class="card-body">
                         <h2 class="card-title">${p.name}</h2>
                         <div class="card-price">${p.price}</div>
-                        <p class
+                        <p class="card-description">${p.description}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderAdminList() {
+            const container = document.getElementById('admin-list-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (products.length === 0) {
+                container.innerHTML = '<div style="color: var(--accent-bronze); font-size: 0.9rem;">Keine Produkte vorhanden.</div>';
+                return;
+            }
+
+            // 1. FILTER anwenden
+            const filterVal = document.getElementById('admin-filter-select').value;
+            let displayList = products;
+            if (filterVal !== 'all') {
+                displayList = products.filter(p => p.category === filterVal);
+            }
+
+            // 2. SORTIERUNG anwenden
+            const sortVal = document.getElementById('admin-sort-select').value;
+            displayList = [...displayList]; // Kopie erstellen zum Sortieren
+
+            if (sortVal === 'newest') {
+                displayList.sort((a, b) => Number(b.id) - Number(a.id));
+            } else if (sortVal === 'name') {
+                displayList.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortVal === 'category') {
+                displayList.sort((a, b) => a.category.localeCompare(b.category));
+            }
+
+            if (displayList.length === 0) {
+                container.innerHTML = '<div style="color: var(--accent-bronze); font-size: 0.9rem;">Keine Produkte in dieser Kategorie gefunden.</div>';
+                return;
+            }
+
+            displayList.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'admin-product-item';
+                item.innerHTML = `
+                    <span>[${String(p.category || '').toUpperCase()}] ${p.name} (${p.price})</span>
+                    <div class="admin-actions">
+                        <button type="button" class="btn-secondary" onclick="startEdit('${p.id}')">Bearbeiten</button>
+                        <button type="button" class="btn-danger" onclick="deleteProduct('${p.id}')">Löschen</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('edit-id').value;
+            const name = document.getElementById('p-name').value;
+            let rawPrice = document.getElementById('p-price').value.trim();
+            if (!rawPrice.endsWith('€')) {
+                rawPrice += ' €';
+            }
+            const category = document.getElementById('p-category').value;
+            const description = document.getElementById('p-desc').value;
+            const fileInput = document.getElementById('p-image');
+
+            if (editId) {
+                const prod = products.find(p => String(p.id) === String(editId));
+                if (prod) {
+                    prod.name = name;
+                    prod.price = rawPrice;
+                    prod.category = category;
+                    prod.description = description;
+
+                    if (fileInput.files && fileInput.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(evt) {
+                            processImageAndSave(evt.target.result, prod, true);
+                        };
+                        reader.readAsDataURL(fileInput.files[0]);
+                    } else {
+                        saveProductsToGoogle();
+                        resetForm();
+                        alert("Produkt erfolgreich aktualisiert!");
+                    }
+                }
+            } else {
+                if (fileInput.files && fileInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        processImageAndSave(evt.target.result, null, false);
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
+                    alert("Bitte wählen Sie ein Bild aus.");
+                }
+            }
+        }
+
+        function processImageAndSave(dataUrl, existingProd, isUpdate) {
+            const img = new Image();
+            img.src = dataUrl;
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const maxDim = 500;
+
+                if (width > height) {
+                    if (width > maxDim) { height *= maxDim / width; width = maxDim; }
+                } else {
+                    if (height > maxDim) { width *= maxDim / height; height = maxDim; }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const optimizedImageBase64 = canvas.toDataURL('image/jpeg', 0.65);
+
+                if (isUpdate && existingProd) {
+                    existingProd.image = optimizedImageBase64;
+                    saveProductsToGoogle();
+                    resetForm();
+                    alert("Produkt inklusive Bild erfolgreich aktualisiert!");
+                } else {
+                    const newProd = {
+                        id: String(Date.now()),
+                        name: document.getElementById('p-name').value,
+                        price: document.getElementById('p-price').value.trim() + (document.getElementById('p-price').value.endsWith('€') ? '' : ' €'),
+                        category: document.getElementById('p-category').value,
+                        description: document.getElementById('p-desc').value,
+                        image: optimizedImageBase64
+                    };
+                    products.unshift(newProd);
+                    saveProductsToGoogle();
+                    resetForm();
+                    alert("Produkt erfolgreich hinzugefügt!");
+                }
+            };
+        }
+
+        function startEdit(id) {
+            const p = products.find(item => String(item.id) === String(id));
+            if (!p) return;
+
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('p-name').value = p.name;
+            document.getElementById('p-price').value = p.price.replace(' €', '').trim();
+            document.getElementById('p-category').value = p.category;
+            document.getElementById('p-desc').value = p.description;
+            document.getElementById('p-image').value = "";
+
+            document.getElementById('form-title').innerText = "Produkt bearbeiten";
+            document.getElementById('save-btn').innerText = "Änderungen speichern";
+            document.getElementById('cancel-edit-btn').style.display = "inline-block";
+
+            document.getElementById('admin-panel').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            resetForm();
+        }
+
+        function resetForm() {
+            document.getElementById('product-form').reset();
+            document.getElementById('edit-id').value = "";
+            document.getElementById('form-title').innerText = "Produkt-Management (Neues Produkt)";
+            document.getElementById('save-btn').innerText = "Produkt hinzufügen";
+            document.getElementById('cancel-edit-btn').style.display = "none";
+        }
+
+        function deleteProduct(id) {
+            if (confirm("Möchten Sie dieses Produkt wirklich löschen?")) {
+                products = products.filter(p => String(p.id) !== String(id));
+                saveProductsToGoogle();
+            }
+        }
+    </script>
+</body>
+</html>
