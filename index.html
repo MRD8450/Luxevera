@@ -399,6 +399,7 @@
             const localData = localStorage.getItem('luxevera_local_cache');
             if (localData) {
                 products = JSON.parse(localData);
+                ensureEuroSigns();
                 renderProducts();
                 renderAdminList();
             }
@@ -406,6 +407,16 @@
             loadProductsFromGoogle();
             setInterval(loadProductsFromGoogle, 5000);
         });
+
+        // Hilfsfunktion: Garantiert, dass jede Preisanzeige IMMER ein € enthält
+        function ensureEuroSigns() {
+            products.forEach(p => {
+                let pr = String(p.price || p.Price || p.preis || '').trim();
+                if (pr && !pr.includes('€')) {
+                    p.price = pr + ' €';
+                }
+            });
+        }
 
         function checkMainPin() {
             const val = document.getElementById('main-pin-input').value.trim();
@@ -454,6 +465,7 @@
             .then(data => {
                 if (Array.isArray(data) && data.length > 0) {
                     products = data;
+                    ensureEuroSigns(); // Direkt beim Laden absichern
                     localStorage.setItem('luxevera_local_cache', JSON.stringify(products));
                     renderProducts();
                     renderAdminList();
@@ -463,6 +475,7 @@
         }
 
         function saveProductsToGoogle() {
+            ensureEuroSigns();
             localStorage.setItem('luxevera_local_cache', JSON.stringify(products));
             renderProducts();
             renderAdminList();
@@ -511,12 +524,15 @@
                 const cat = (p.category || p.Category || '').toLowerCase();
                 card.className = `card ${cat === 'parfum' ? 'special-offer-card' : ''}`;
                 
+                const priceText = String(p.price || p.Price || '').trim();
+                const formattedPrice = priceText.endsWith('€') ? priceText : priceText + ' €';
+
                 card.innerHTML = `
                     ${cat === 'parfum' ? '<span class="tile-badge">Special Deal</span>' : ''}
                     <img src="${p.image || p.Image}" alt="${p.name || p.Name}">
                     <div class="card-body">
                         <h2 class="card-title">${p.name || p.Name}</h2>
-                        <div class="card-price">${p.price || p.Price}</div>
+                        <div class="card-price">${formattedPrice}</div>
                         <p class="card-description">${p.description || p.Description || ''}</p>
                     </div>
                 `;
@@ -560,13 +576,16 @@
                 const prodId = p.id || p.ID || p.Id;
                 const prodCat = (p.category || p.Category || '').toUpperCase();
                 const prodName = p.name || p.Name;
-                const prodPrice = p.price || p.Price;
+                
+                let pPrice = String(p.price || p.Price || '').trim();
+                if (!pPrice.endsWith('€')) pPrice += ' €';
+
                 const isHidden = p.hidden === true || p.hidden === "true";
 
                 const item = document.createElement('div');
                 item.className = 'admin-product-item';
                 item.innerHTML = `
-                    <span>[${prodCat}] ${prodName} (${prodPrice}) ${isHidden ? '<strong style="color:#b8860b;">(Ausgeblendet)</strong>' : ''}</span>
+                    <span>[${prodCat}] ${prodName} (${pPrice}) ${isHidden ? '<strong style="color:#b8860b;">(Ausgeblendet)</strong>' : ''}</span>
                     <div class="admin-actions">
                         <button type="button" class="btn-toggle ${isHidden ? 'hidden-state' : ''}" onclick="toggleProductVisibility('${prodId}')">${isHidden ? 'Einblenden' : 'Ausblenden'}</button>
                         <button type="button" class="btn-secondary" onclick="startEdit('${prodId}')">Bearbeiten</button>
@@ -591,7 +610,6 @@
             const editId = document.getElementById('edit-id').value;
             const name = document.getElementById('p-name').value;
             
-            // Preis bereinigen und felsenfest das €-Zeichen anhängen
             let rawPrice = document.getElementById('p-price').value.replace(/€/g, '').trim();
             const finalPrice = rawPrice + ' €';
 
