@@ -575,18 +575,16 @@
         }
 
         function startEdit(id) {
-            // Sucht primär im Array oder holt zur Not die Daten aus dem Cache/Storage
-            let p = products.find(item => String(item.id) === String(id));
-            if (!p) {
-                const cached = localStorage.getItem('luxevera_local_cache');
-                if (cached) {
-                    products = JSON.parse(cached);
-                    p = products.find(item => String(item.id) === String(id));
-                }
+            // Immer zuerst prüfen, ob Cache vorhanden ist
+            const cached = localStorage.getItem('luxevera_local_cache');
+            if (cached) {
+                products = JSON.parse(cached);
             }
 
+            // Strikt per String-Vergleich suchen
+            const p = products.find(item => String(item.id) === String(id));
             if (!p) {
-                alert("Fehler: Produkt nicht gefunden.");
+                alert("Fehler: Produkt mit ID " + id + " wurde nicht gefunden.");
                 return;
             }
 
@@ -595,7 +593,7 @@
             document.getElementById('p-price').value = p.price ? p.price.replace('€', '').trim() : '';
             document.getElementById('p-category').value = p.category || 'parfum';
             document.getElementById('p-desc').value = p.description || '';
-            document.getElementById('p-image').value = "";
+            document.getElementById('p-image').value = ""; // Datei-Input leeren
 
             document.getElementById('form-title').innerText = "Produkt bearbeiten";
             document.getElementById('save-btn').innerText = "Änderungen speichern";
