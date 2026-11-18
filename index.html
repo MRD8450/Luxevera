@@ -591,7 +591,8 @@
             const editId = document.getElementById('edit-id').value;
             const name = document.getElementById('p-name').value;
             
-            let rawPrice = document.getElementById('p-price').value.replace('€', '').trim();
+            // Preis bereinigen und felsenfest das €-Zeichen anhängen
+            let rawPrice = document.getElementById('p-price').value.replace(/€/g, '').trim();
             const finalPrice = rawPrice + ' €';
 
             const category = document.getElementById('p-category').value;
@@ -652,9 +653,12 @@
                 ctx.drawImage(img, 0, 0, width, height);
 
                 const optimizedImageBase64 = canvas.toDataURL('image/jpeg', 0.85);
+                let rawPrice = document.getElementById('p-price').value.replace(/€/g, '').trim();
+                const finalPrice = rawPrice + ' €';
 
                 if (isUpdate && existingProd) {
                     existingProd.image = optimizedImageBase64;
+                    existingProd.price = finalPrice;
                     saveProductsToGoogle();
                     resetForm();
                     alert("Produkt inklusive Bild erfolgreich aktualisiert!");
@@ -662,7 +666,7 @@
                     const newProd = {
                         id: String(Date.now()),
                         name: document.getElementById('p-name').value,
-                        price: document.getElementById('p-price').value.replace('€', '').trim() + ' €',
+                        price: finalPrice,
                         category: document.getElementById('p-category').value,
                         description: document.getElementById('p-desc').value,
                         image: optimizedImageBase64,
@@ -693,7 +697,7 @@
             const prodCategory = p.category || p.Category || 'parfum';
             const prodDesc = p.description || p.Description || p.beschreibung || '';
 
-            prodPrice = String(prodPrice).replace('€', '').trim();
+            prodPrice = String(prodPrice).replace(/€/g, '').trim();
 
             document.getElementById('edit-id').value = p.id || p.ID || id;
             document.getElementById('p-name').value = prodName;
