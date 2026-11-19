@@ -151,16 +151,18 @@
         .admin-controls-bar select { flex: 1; min-width: 180px; padding: 10px; border: 1px solid var(--accent-bronze); border-radius: 8px; background: rgba(255, 255, 255, 0.9); outline: none; }
 
         .admin-product-list { margin-top: 30px; }
-        .admin-product-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.5); padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; }
-        .admin-actions { display: flex; gap: 5px; align-items: center; }
+        .admin-product-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.5); padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .admin-product-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 220px; }
+        .admin-thumb { width: 52px; height: 52px; object-fit: contain; border-radius: 6px; background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(115, 89, 66, 0.25); flex-shrink: 0; }
+        .admin-actions { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
         .btn-danger { background-color: #a94442; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
 
         #product-container { display: none; }
-        .grid-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+        .grid-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; align-items: start; }
         
         .card { background: var(--card-bg); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; position: relative; }
         .card.special-offer-card { border: 2px solid var(--accent-gold-bright); }
-        .card img { width: 100%; height: 250px; object-fit: cover; }
+        .card img { width: 100%; height: auto; max-height: 360px; object-fit: contain; background: rgba(255, 255, 255, 0.35); display: block; }
         .card-body { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
         .card-title { font-size: 1.3rem; margin-bottom: 8px; }
         .card-price { font-size: 1.1rem; font-weight: bold; color: var(--accent-bronze); margin-bottom: 12px; }
@@ -379,6 +381,11 @@
         let products = [];
         let activeCategory = 'all';
 
+        function getProductId(p) {
+            if (!p) return '';
+            return String(p.id ?? p.ID ?? p.Id ?? '').trim();
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             if (sessionStorage.getItem('luxevera_unlocked') === 'true') {
                 document.getElementById('pin-overlay').style.display = 'none';
@@ -531,10 +538,11 @@
                 
                 const priceText = String(p.price || p.Price || '').trim();
                 const formattedPrice = priceText.endsWith('€') ? priceText : priceText + ' €';
+                const imgSrc = p.image || p.Image || '';
 
                 card.innerHTML = `
                     ${cat === 'parfum' ? '<span class="tile-badge">Special Deal</span>' : ''}
-                    <img src="${p.image || p.Image}" alt="${p.name || p.Name}">
+                    ${imgSrc ? `<img src="${imgSrc}" alt="${p.name || p.Name}">` : ''}
                     <div class="card-body">
                         <h2 class="card-title">${p.name || p.Name}</h2>
                         <div class="card-price">${formattedPrice}</div>
@@ -565,7 +573,7 @@
             displayList = [...displayList];
 
             if (sortVal === 'newest') {
-                displayList.sort((a, b) => Number(b.id || b.ID || 0) - Number(a.id || a.ID || 0));
+                displayList.sort((a, b) => Number(getProductId(b) || 0) - Number(getProductId(a) || 0));
             } else if (sortVal === 'name') {
                 displayList.sort((a, b) => (a.name || a.Name || '').localeCompare(b.name || b.Name || ''));
             } else if (sortVal === 'category') {
@@ -578,9 +586,10 @@
             }
 
             displayList.forEach(p => {
-                const prodId = p.id || p.ID || p.Id;
+                const prodId = getProductId(p);
                 const prodCat = (p.category || p.Category || '').toUpperCase();
                 const prodName = p.name || p.Name;
+                const prodImg = p.image || p.Image || '';
                 
                 let pPrice = String(p.price || p.Price || '').trim();
                 if (!pPrice.endsWith('€')) pPrice += ' €';
@@ -590,7 +599,10 @@
                 const item = document.createElement('div');
                 item.className = 'admin-product-item';
                 item.innerHTML = `
-                    <span>[${prodCat}] ${prodName} (${pPrice}) ${isHidden ? '<strong style="color:#b8860b;">(Ausgeblendet)</strong>' : ''}</span>
+                    <div class="admin-product-info">
+                        ${prodImg ? `<img src="${prodImg}" alt="${prodName}" class="admin-thumb">` : ''}
+                        <span>[${prodCat}] ${prodName} (${pPrice}) ${isHidden ? '<strong style="color:#b8860b;">(Ausgeblendet)</strong>' : ''}</span>
+                    </div>
                     <div class="admin-actions">
                         <button type="button" class="btn-toggle ${isHidden ? 'hidden-state' : ''}" onclick="toggleProductVisibility('${prodId}')">${isHidden ? 'Einblenden' : 'Ausblenden'}</button>
                         <button type="button" class="btn-secondary" onclick="startEdit('${prodId}')">Bearbeiten</button>
@@ -602,7 +614,7 @@
         }
 
         function toggleProductVisibility(id) {
-            const p = products.find(item => String(item.id || item.ID || item.Id) === String(id));
+            const p = products.find(item => getProductId(item) === String(id).trim());
             if (p) {
                 const currentHidden = p.hidden === true || p.hidden === "true";
                 p.hidden = !currentHidden;
@@ -612,7 +624,7 @@
 
         function handleFormSubmit(e) {
             e.preventDefault();
-            const editId = document.getElementById('edit-id').value;
+            const editId = document.getElementById('edit-id').value.trim();
             const name = document.getElementById('p-name').value;
             
             let rawPrice = document.getElementById('p-price').value.replace(/€/g, '').trim();
@@ -623,7 +635,7 @@
             const fileInput = document.getElementById('p-image');
 
             if (editId) {
-                const prod = products.find(p => String(p.id || p.ID || p.Id) === String(editId));
+                const prod = products.find(p => getProductId(p) === editId);
                 if (prod) {
                     prod.name = name;
                     prod.price = finalPrice;
@@ -662,7 +674,7 @@
                 const canvas = document.createElement('canvas');
                 let width = img.width;
                 let height = img.height;
-                const maxDim = 500; // Kompakt für stabile Google-Sheets-Zellen
+                const maxDim = 900;
 
                 if (width > height) {
                     if (width > maxDim) { height *= maxDim / width; width = maxDim; }
@@ -675,7 +687,7 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
 
-                const optimizedImageBase64 = canvas.toDataURL('image/jpeg', 0.65);
+                const optimizedImageBase64 = canvas.toDataURL('image/jpeg', 0.82);
                 let rawPrice = document.getElementById('p-price').value.replace(/€/g, '').trim();
                 const finalPrice = rawPrice + ' €';
 
@@ -704,25 +716,21 @@
         }
 
         function startEdit(id) {
-            const cached = localStorage.getItem('luxevera_local_cache');
-            if (cached) {
-                products = JSON.parse(cached);
-            }
-
-            const p = products.find(item => String(item.id || item.ID || item.Id) === String(id));
+            const targetId = String(id).trim();
+            const p = products.find(item => getProductId(item) === targetId);
             if (!p) {
-                alert("Fehler: Produkt mit ID " + id + " wurde nicht gefunden.");
+                alert("Fehler: Produkt mit ID " + targetId + " wurde nicht gefunden.");
                 return;
             }
 
             const prodName = p.name || p.Name || '';
             let prodPrice = p.price || p.Price || p.preis || '';
-            const prodCategory = p.category || p.Category || 'parfum';
+            const prodCategory = (p.category || p.Category || 'parfum').toLowerCase();
             const prodDesc = p.description || p.Description || p.beschreibung || '';
 
             prodPrice = String(prodPrice).replace(/€/g, '').trim();
 
-            document.getElementById('edit-id').value = p.id || p.ID || id;
+            document.getElementById('edit-id').value = getProductId(p);
             document.getElementById('p-name').value = prodName;
             document.getElementById('p-price').value = prodPrice;
             document.getElementById('p-category').value = prodCategory;
@@ -750,7 +758,8 @@
 
         function deleteProduct(id) {
             if (confirm("Möchten Sie dieses Produkt wirklich löschen?")) {
-                products = products.filter(p => String(p.id || p.ID || p.Id) !== String(id));
+                const targetId = String(id).trim();
+                products = products.filter(p => getProductId(p) !== targetId);
                 saveProductsToGoogle();
             }
         }
