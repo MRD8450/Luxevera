@@ -376,10 +376,11 @@
     <script>
         const MAIN_PIN = "2026";
         const ADMIN_PIN = "8888";
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwyym8EZstN41z1H7IUE41oHJDwcq71_ZmgXZVBgdwS0cv5-qByzvG_5-V56ZyluhbMqw/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwawUSkHvl8WtuOYMw0c7ynPtdq0vn1NhFQG99rkqKDfPuCQpp1LDzAcYAcMRErwR7mIw/exec";
 
         let products = [];
         let activeCategory = 'all';
+        let isSaving = false;
 
         function getProductId(p) {
             if (!p) return '';
@@ -474,9 +475,11 @@
         }
 
         function loadProductsFromGoogle() {
+            if (isSaving) return;
             fetch(GOOGLE_SCRIPT_URL)
             .then(res => res.json())
             .then(data => {
+                if (isSaving) return;
                 if (Array.isArray(data)) {
                     products = data;
                     ensureEuroSigns();
@@ -488,6 +491,7 @@
         }
 
         function saveProductsToGoogle() {
+            isSaving = true;
             ensureEuroSigns();
             renderProducts();
             renderAdminList();
@@ -495,9 +499,13 @@
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({ action: "save", products: products })
-            }).catch(err => console.error("Sync-Fehler:", err));
+            })
+            .catch(err => console.error("Sync-Fehler:", err))
+            .finally(() => {
+                setTimeout(() => { isSaving = false; }, 8000);
+            });
         }
 
         function openCategory(catKey, catTitle) {
