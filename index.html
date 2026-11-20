@@ -374,7 +374,7 @@
     <script>
         const MAIN_PIN = "2026";
         const ADMIN_PIN = "8888";
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFA60kCscTeHtLS67Tgh-5kUVkVh8zdDLeNuur7wx9ZsulP7cKSuZDxSW5jpc330gZ8w/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby7XY-Q7lGrIEKWrLMoZdi565HnYmR_C75_F0uhOPZ_jfFNFCyv4GaOXQzyEwkOKoKy/exec";
 
         let products = [];
         let activeCategory = 'all';
@@ -493,7 +493,11 @@
 
         function loadProductsFromGoogle() {
             if (isSaving) return;
-            fetch(GOOGLE_SCRIPT_URL + "?t=" + Date.now())
+            const cacheBuster = Date.now() + "_" + Math.random().toString(36).slice(2);
+            fetch(GOOGLE_SCRIPT_URL + "?nocache=" + cacheBuster, {
+                method: "GET",
+                cache: "no-store"
+            })
             .then(res => res.json())
             .then(data => {
                 if (isSaving) return;
@@ -554,7 +558,7 @@
             const filtered = products.filter(p => {
                 const cat = String(p.category || p.Category || '').trim().toLowerCase();
                 const hiddenRaw = String(p.hidden ?? '').trim().toLowerCase();
-                const isHidden = (p.hidden === true || hiddenRaw === 'true');
+                const isHidden = (p.hidden === true || hiddenRaw === 'true' || hiddenRaw === 'wahr' || hiddenRaw === '1');
                 return cat === String(activeCategory).trim().toLowerCase() && !isHidden;
             });
 
@@ -626,7 +630,8 @@
                 let pPrice = String(p.price || p.Price || '').trim();
                 if (!pPrice.endsWith('€')) pPrice += ' €';
 
-                const isHidden = p.hidden === true || p.hidden === "true";
+                const hiddenRaw = String(p.hidden ?? '').trim().toLowerCase();
+                const isHidden = (p.hidden === true || hiddenRaw === 'true' || hiddenRaw === 'wahr' || hiddenRaw === '1');
 
                 const item = document.createElement('div');
                 item.className = 'admin-product-item';
@@ -648,7 +653,8 @@
         function toggleProductVisibility(id) {
             const p = products.find(item => getProductId(item) === String(id).trim());
             if (p) {
-                const currentHidden = p.hidden === true || p.hidden === "true";
+                const hiddenRaw = String(p.hidden ?? '').trim().toLowerCase();
+                const currentHidden = (p.hidden === true || hiddenRaw === 'true' || hiddenRaw === 'wahr' || hiddenRaw === '1');
                 p.hidden = !currentHidden;
                 saveProductsToGoogle();
             }
