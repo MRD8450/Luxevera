@@ -37,7 +37,7 @@
         #pin-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #e5d9cc;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
             display: flex; justify-content: center; align-items: center; z-index: 999999;
         }
 
@@ -205,4 +205,651 @@
             z-index: 2;
             text-align: center;
             display: flex;
-            flex-direction: column
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .screensaver-logo {
+            max-width: 320px;
+            width: 80%;
+            height: auto;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+            animation: pulseLogo 3s infinite ease-in-out;
+        }
+
+        .screensaver-text {
+            color: var(--accent-gold-bright);
+            font-size: 1.2rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            font-family: 'Georgia', serif;
+            opacity: 0.9;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        @keyframes pulseLogo {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+            100% { transform: scale(1); }
+        }
+
+        footer { text-align: center; margin-top: 50px; font-size: 0.85rem; color: var(--accent-bronze); }
+    </style>
+</head>
+<body>
+
+    <div id="pin-overlay">
+        <div class="pin-box">
+            <h2>LUXEVERA</h2>
+            <p>Bitte geben Sie den PIN-Code ein</p>
+            <input type="password" id="main-pin-input" placeholder="••••" maxlength="6" autofocus>
+            <button type="button" id="main-pin-btn" onclick="checkMainPin()">Zugriff anfordern</button>
+            <div id="main-pin-error" class="pin-error">Falscher PIN-Code.</div>
+        </div>
+    </div>
+
+    <div id="admin-pin-modal">
+        <div class="pin-box">
+            <button class="close-pin-btn" type="button" id="close-admin-modal-btn">×</button>
+            <h2>Admin-Bereich</h2>
+            <p>Admin-PIN eingeben</p>
+            <input type="password" id="admin-pin-input" placeholder="••••" maxlength="6">
+            <button type="button" id="admin-pin-btn" onclick="checkAdminPin()">Bestätigen</button>
+            <div id="admin-pin-error" class="pin-error">Falscher Admin-PIN.</div>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <header>
+            <button class="admin-toggle-btn" type="button" id="admin-toggle-action-btn">⚙️ Management</button>
+            <img src="logo.png" alt="LUXEVERA Logo" class="logo-img">
+        </header>
+
+        <div id="admin-panel">
+            <h3 id="form-title">Produkt-Management (Neues Produkt)</h3>
+            <form id="product-form" onsubmit="handleFormSubmit(event)">
+                <input type="hidden" id="edit-id" value="">
+                <div class="form-group">
+                    <label for="p-name">Produktname</label>
+                    <input type="text" id="p-name" required placeholder="z. B. Royale Jasmin Parfüm">
+                </div>
+                <div class="form-group">
+                    <label for="p-price">Preis</label>
+                    <div class="price-input-wrapper">
+                        <input type="text" id="p-price" required placeholder="195,00">
+                        <span class="price-symbol">€</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="p-category">Kategorie</label>
+                    <select id="p-category">
+                        <option value="parfum">Parfüm (Special Deal)</option>
+                        <option value="kosmetik">Kosmetik & Make-up</option>
+                        <option value="accessoires">Accessoires & Brillen</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="p-desc">Beschreibung</label>
+                    <textarea id="p-desc" required placeholder="Edle Noten von..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="p-image">Produktbild auswählen (aus Galerie/Speicher)</label>
+                    <input type="file" id="p-image" accept="image/*">
+                    <small style="color: var(--accent-bronze); display:block; margin-top:5px;" id="img-hint">Beim Bearbeiten optional (bleibt sonst unverändert).</small>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn-primary" id="save-btn">Produkt hinzufügen</button>
+                    <button type="button" class="btn-danger" id="cancel-edit-btn" style="display:none;" onclick="cancelEdit()">Abbrechen</button>
+                </div>
+            </form>
+
+            <div class="admin-product-list">
+                <h4 style="margin-bottom: 15px;">Bestehende Produkte verwalten:</h4>
+                <div class="admin-controls-bar">
+                    <select id="admin-filter-select" onchange="renderAdminList()">
+                        <option value="all">🔍 Filter: Alle Kategorien</option>
+                        <option value="parfum">Parfüm</option>
+                        <option value="kosmetik">Kosmetik & Make-up</option>
+                        <option value="accessoires">Accessoires</option>
+                    </select>
+                    <select id="admin-sort-select" onchange="renderAdminList()">
+                        <option value="newest">↕️ Sortierung: Neueste zuerst</option>
+                        <option value="name">↕️ Sortierung: Name (A-Z)</option>
+                        <option value="category">↕️ Sortierung: Kategorie</option>
+                    </select>
+                </div>
+                <div id="admin-list-container"></div>
+            </div>
+        </div>
+
+        <div id="category-tiles" class="category-tiles-container">
+            <div class="category-tile offer-tile" onclick="openCategory('parfum', 'Parfüm')">
+                <span class="tile-badge">Special Deal</span>
+                <img src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80" alt="Parfüm">
+                <div class="category-tile-overlay">
+                    <div class="category-tile-title">Parfüm</div>
+                </div>
+            </div>
+            <div class="category-tile" onclick="openCategory('kosmetik', 'Kosmetik & Make-up')">
+                <img src="https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80" alt="Kosmetik">
+                <div class="category-tile-overlay">
+                    <div class="category-tile-title">Kosmetik</div>
+                </div>
+            </div>
+            <div class="category-tile" onclick="openCategory('accessoires', 'Accessoires')">
+                <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80" alt="Accessoires">
+                <div class="category-tile-overlay">
+                    <div class="category-tile-title">Accessoires</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="back-nav" class="back-nav">
+            <button class="back-btn" type="button" onclick="showCategories()">← Kategorien</button>
+            <div id="active-cat-title" class="active-cat-title">Kategorie</div>
+        </div>
+
+        <div id="product-container">
+            <main class="grid-container" id="product-grid"></main>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 LUXEVERA. Alle Rechte vorbehalten.</p>
+        </footer>
+    </div>
+
+    <div id="screensaver" onclick="resetScreensaverTimer()">
+        <div class="screensaver-slide active" style="background-image: url('https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="screensaver-slide" style="background-image: url('https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="screensaver-slide" style="background-image: url('https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1200&q=80');"></div>
+
+        <div class="screensaver-content">
+            <img src="logo.png" alt="LUXEVERA" class="screensaver-logo">
+            <div class="screensaver-text">Entdecken Sie den Luxus</div>
+        </div>
+    </div>
+
+    <script>
+        const MAIN_PIN = "2026";
+        const ADMIN_PIN = "8888";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFA60kCscTeHtLS67Tgh-5kUVkVh8zdDLeNuur7wx9ZsulP7cKSuZDxSW5jpc330gZ8w/exec";
+
+        let products = [];
+        let activeCategory = 'all';
+        let isSaving = false;
+        let localRevision = 0;
+        let lastSavedRevision = 0;
+
+        function getProductId(p) {
+            if (!p) return '';
+            return String(p.id ?? p.ID ?? p.Id ?? '').trim();
+        }
+
+        function applyPinState() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('reset') === '1') {
+                sessionStorage.removeItem('luxevera_unlocked');
+            }
+            const overlay = document.getElementById('pin-overlay');
+            const mainContent = document.getElementById('main-content');
+            if (mainContent) mainContent.style.display = 'block';
+            if (overlay) {
+                overlay.style.display = (sessionStorage.getItem('luxevera_unlocked') === 'true') ? 'none' : 'flex';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            applyPinState();
+
+            const mainPinInput = document.getElementById('main-pin-input');
+            if (mainPinInput) {
+                mainPinInput.focus();
+                mainPinInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') checkMainPin();
+                });
+            }
+
+            const adminPinInput = document.getElementById('admin-pin-input');
+            if (adminPinInput) {
+                adminPinInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') checkAdminPin();
+                });
+            }
+
+            const closeBtn = document.getElementById('close-admin-modal-btn');
+            if (closeBtn) closeBtn.addEventListener('click', closeAdminPinModal);
+
+            const adminToggleBtn = document.getElementById('admin-toggle-action-btn');
+            if (adminToggleBtn) adminToggleBtn.addEventListener('click', requestAdminAccess);
+
+            loadProductsFromGoogle();
+            setInterval(loadProductsFromGoogle, 5000);
+        });
+
+        window.addEventListener('pageshow', () => {
+            applyPinState();
+        });
+
+        function checkMainPin() {
+            const inputField = document.getElementById('main-pin-input');
+            const errorDiv = document.getElementById('main-pin-error');
+            const val = inputField.value.trim();
+
+            if (val === MAIN_PIN) {
+                sessionStorage.setItem('luxevera_unlocked', 'true');
+                document.getElementById('pin-overlay').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                errorDiv.style.display = 'none';
+                loadProductsFromGoogle();
+            } else {
+                errorDiv.style.display = 'block';
+                inputField.value = '';
+                inputField.focus();
+            }
+        }
+
+        function requestAdminAccess() {
+            const panel = document.getElementById('admin-panel');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+                return;
+            }
+            document.getElementById('admin-pin-modal').style.display = 'flex';
+            document.getElementById('admin-pin-input').value = '';
+            document.getElementById('admin-pin-input').focus();
+            document.getElementById('admin-pin-error').style.display = 'none';
+        }
+
+        function closeAdminPinModal() {
+            document.getElementById('admin-pin-modal').style.display = 'none';
+        }
+
+        function checkAdminPin() {
+            const inputField = document.getElementById('admin-pin-input');
+            const errorDiv = document.getElementById('admin-pin-error');
+            const val = inputField.value.trim();
+
+            if (val === ADMIN_PIN) {
+                closeAdminPinModal();
+                document.getElementById('admin-panel').style.display = 'block';
+                renderAdminList();
+            } else {
+                errorDiv.style.display = 'block';
+                inputField.value = '';
+                inputField.focus();
+            }
+        }
+
+        function ensureEuroSigns() {
+            products.forEach(p => {
+                let pr = String(p.price || p.Price || p.preis || '').trim();
+                if (pr && !pr.includes('€')) {
+                    p.price = pr + ' €';
+                }
+            });
+        }
+
+        function loadProductsFromGoogle() {
+            if (isSaving) return;
+            fetch(GOOGLE_SCRIPT_URL + "?t=" + Date.now())
+            .then(res => res.json())
+            .then(data => {
+                if (isSaving) return;
+                if (Array.isArray(data)) {
+                    products = data;
+                    localRevision = lastSavedRevision;
+                    ensureEuroSigns();
+                    renderProducts();
+                    renderAdminList();
+                }
+            })
+            .catch(err => console.error("Fehler beim Laden von Google:", err));
+        }
+
+        function saveProductsToGoogle() {
+            localRevision++;
+            const currentRev = localRevision;
+            isSaving = true;
+            ensureEuroSigns();
+            renderProducts();
+            renderAdminList();
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: "save", products: products })
+            })
+            .then(() => {
+                lastSavedRevision = currentRev;
+            })
+            .catch(err => console.error("Sync-Fehler:", err))
+            .finally(() => {
+                setTimeout(() => { isSaving = false; }, 10000);
+            });
+        }
+
+        function openCategory(catKey, catTitle) {
+            activeCategory = catKey;
+            document.getElementById('category-tiles').style.display = 'none';
+            document.getElementById('back-nav').style.display = 'flex';
+            document.getElementById('product-container').style.display = 'block';
+            document.getElementById('active-cat-title').innerText = catTitle;
+            renderProducts();
+        }
+
+        function showCategories() {
+            document.getElementById('category-tiles').style.display = 'grid';
+            document.getElementById('back-nav').style.display = 'none';
+            document.getElementById('product-container').style.display = 'none';
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('product-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const filtered = products.filter(p => {
+                const cat = String(p.category || p.Category || '').trim().toLowerCase();
+                const hiddenRaw = String(p.hidden ?? '').trim().toLowerCase();
+                const isHidden = (p.hidden === true || hiddenRaw === 'true');
+                return cat === String(activeCategory).trim().toLowerCase() && !isHidden;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--accent-bronze); padding: 40px;">In dieser Kategorie befinden sich aktuell keine Produkte.</div>';
+                return;
+            }
+
+            filtered.forEach(p => {
+                const card = document.createElement('div');
+                const cat = (p.category || p.Category || '').toLowerCase();
+                card.className = `card ${cat === 'parfum' ? 'special-offer-card' : ''}`;
+
+                const priceText = String(p.price || p.Price || '').trim();
+                const formattedPrice = priceText.endsWith('€') ? priceText : priceText + ' €';
+                const imgSrc = p.image || p.Image || '';
+
+                card.innerHTML = `
+                    ${cat === 'parfum' ? '<span class="tile-badge">Special Deal</span>' : ''}
+                    ${imgSrc ? `<img src="${imgSrc}" alt="${p.name || p.Name}">` : ''}
+                    <div class="card-body">
+                        <h2 class="card-title">${p.name || p.Name}</h2>
+                        <div class="card-price">${formattedPrice}</div>
+                        <p class="card-description">${p.description || p.Description || ''}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderAdminList() {
+            const container = document.getElementById('admin-list-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (products.length === 0) {
+                container.innerHTML = '<div style="color: var(--accent-bronze); font-size: 0.9rem;">Keine Produkte vorhanden.</div>';
+                return;
+            }
+
+            const filterVal = document.getElementById('admin-filter-select').value;
+            let displayList = products;
+            if (filterVal !== 'all') {
+                displayList = products.filter(p => (p.category || p.Category || '').toLowerCase() === filterVal.toLowerCase());
+            }
+
+            const sortVal = document.getElementById('admin-sort-select').value;
+            displayList = [...displayList];
+
+            if (sortVal === 'newest') {
+                displayList.sort((a, b) => Number(getProductId(b) || 0) - Number(getProductId(a) || 0));
+            } else if (sortVal === 'name') {
+                displayList.sort((a, b) => (a.name || a.Name || '').localeCompare(b.name || b.Name || ''));
+            } else if (sortVal === 'category') {
+                displayList.sort((a, b) => (a.category || a.Category || '').localeCompare(b.category || b.Category || ''));
+            }
+
+            if (displayList.length === 0) {
+                container.innerHTML = '<div style="color: var(--accent-bronze); font-size: 0.9rem;">Keine Produkte in dieser Kategorie gefunden.</div>';
+                return;
+            }
+
+            displayList.forEach(p => {
+                const prodId = getProductId(p);
+                const prodCat = (p.category || p.Category || '').toUpperCase();
+                const prodName = p.name || p.Name;
+                const prodImg = p.image || p.Image || '';
+
+                let pPrice = String(p.price || p.Price || '').trim();
+                if (!pPrice.endsWith('€')) pPrice += ' €';
+
+                const isHidden = p.hidden === true || p.hidden === "true";
+
+                const item = document.createElement('div');
+                item.className = 'admin-product-item';
+                item.innerHTML = `
+                    <div class="admin-product-info">
+                        ${prodImg ? `<img src="${prodImg}" alt="${prodName}" class="admin-thumb">` : ''}
+                        <span>[${prodCat}] ${prodName} (${pPrice}) ${isHidden ? '<strong style="color:#b8860b;">(Ausgeblendet)</strong>' : ''}</span>
+                    </div>
+                    <div class="admin-actions">
+                        <button type="button" class="btn-toggle ${isHidden ? 'hidden-state' : ''}" onclick="toggleProductVisibility('${prodId}')">${isHidden ? 'Einblenden' : 'Ausblenden'}</button>
+                        <button type="button" class="btn-secondary" onclick="startEdit('${prodId}')">Bearbeiten</button>
+                        <button type="button" class="btn-danger" onclick="deleteProduct('${prodId}')">Löschen</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function toggleProductVisibility(id) {
+            const p = products.find(item => getProductId(item) === String(id).trim());
+            if (p) {
+                const currentHidden = p.hidden === true || p.hidden === "true";
+                p.hidden = !currentHidden;
+                saveProductsToGoogle();
+            }
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('edit-id').value.trim();
+            const name = document.getElementById('p-name').value;
+
+            let rawPrice = document.getElementById('p-price').value.replace(/€/g, '').trim();
+            const finalPrice = rawPrice + ' €';
+
+            const category = document.getElementById('p-category').value;
+            const description = document.getElementById('p-desc').value;
+            const fileInput = document.getElementById('p-image');
+
+            if (editId) {
+                const prod = products.find(p => getProductId(p) === editId);
+                if (prod) {
+                    prod.name = name;
+                    prod.price = finalPrice;
+                    prod.category = category;
+                    prod.description = description;
+
+                    if (fileInput.files && fileInput.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(evt) {
+                            processImageAndSave(evt.target.result, prod, true);
+                        };
+                        reader.readAsDataURL(fileInput.files[0]);
+                    } else {
+                        saveProductsToGoogle();
+                        resetForm();
+                        alert("Produkt erfolgreich aktualisiert!");
+                    }
+                }
+            } else {
+                if (fileInput.files && fileInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        processImageAndSave(evt.target.result, null, false);
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
+                    alert("Bitte wählen Sie ein Bild aus.");
+                }
+            }
+        }
+
+        function processImageAndSave(dataUrl, existingProd, isUpdate) {
+            const img = new Image();
+            img.src = dataUrl;
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const maxDim = 800;
+
+                if (width > height) {
+                    if (width > maxDim) { height *= maxDim / width; width = maxDim; }
+                } else {
+                    if (height > maxDim) { width *= maxDim / height; height = maxDim; }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const optimizedImageBase64 = canvas.toDataURL('image/jpeg', 0.75);
+                let rawPrice = document.getElementById('p-price').value.replace(/€/g, '').trim();
+                const finalPrice = rawPrice + ' €';
+
+                if (isUpdate && existingProd) {
+                    existingProd.image = optimizedImageBase64;
+                    existingProd.price = finalPrice;
+                    saveProductsToGoogle();
+                    resetForm();
+                    alert("Produkt inklusive Bild erfolgreich aktualisiert!");
+                } else {
+                    const newProd = {
+                        id: String(Date.now()),
+                        name: document.getElementById('p-name').value,
+                        price: finalPrice,
+                        category: document.getElementById('p-category').value,
+                        description: document.getElementById('p-desc').value,
+                        image: optimizedImageBase64,
+                        hidden: false
+                    };
+                    products.unshift(newProd);
+                    saveProductsToGoogle();
+                    resetForm();
+                    alert("Produkt erfolgreich hinzugefügt!");
+                }
+            };
+        }
+
+        function startEdit(id) {
+            const targetId = String(id).trim();
+            const p = products.find(item => getProductId(item) === targetId);
+            if (!p) {
+                alert("Fehler: Produkt mit ID " + targetId + " wurde nicht gefunden.");
+                return;
+            }
+
+            const prodName = p.name || p.Name || '';
+            let prodPrice = p.price || p.Price || p.preis || '';
+            const prodCategory = (p.category || p.Category || 'parfum').toLowerCase();
+            const prodDesc = p.description || p.Description || p.beschreibung || '';
+
+            prodPrice = String(prodPrice).replace(/€/g, '').trim();
+
+            document.getElementById('edit-id').value = getProductId(p);
+            document.getElementById('p-name').value = prodName;
+            document.getElementById('p-price').value = prodPrice;
+            document.getElementById('p-category').value = prodCategory;
+            document.getElementById('p-desc').value = prodDesc;
+            document.getElementById('p-image').value = "";
+
+            document.getElementById('form-title').innerText = "Produkt bearbeiten";
+            document.getElementById('save-btn').innerText = "Änderungen speichern";
+            document.getElementById('cancel-edit-btn').style.display = "inline-block";
+
+            document.getElementById('admin-panel').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            resetForm();
+        }
+
+        function resetForm() {
+            document.getElementById('product-form').reset();
+            document.getElementById('edit-id').value = "";
+            document.getElementById('form-title').innerText = "Produkt-Management (Neues Produkt)";
+            document.getElementById('save-btn').innerText = "Produkt hinzufügen";
+            document.getElementById('cancel-edit-btn').style.display = "none";
+        }
+
+        function deleteProduct(id) {
+            if (confirm("Möchten Sie dieses Produkt wirklich löschen?")) {
+                const targetId = String(id).trim();
+                products = products.filter(p => getProductId(p) !== targetId);
+                localRevision++;
+                const currentRev = localRevision;
+                isSaving = true;
+                ensureEuroSigns();
+                renderProducts();
+                renderAdminList();
+
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: "save", mode: "delete", products: products })
+                })
+                .then(() => { lastSavedRevision = currentRev; })
+                .catch(err => console.error("Sync-Fehler:", err))
+                .finally(() => { setTimeout(() => { isSaving = false; }, 10000); });
+            }
+        }
+
+        let screensaverTimer;
+        let slideInterval;
+        const IDLE_TIME_LIMIT = 120000;
+
+        function resetScreensaverTimer() {
+            const saver = document.getElementById('screensaver');
+            if (saver.classList.contains('active')) {
+                saver.classList.remove('active');
+                clearInterval(slideInterval);
+            }
+            clearTimeout(screensaverTimer);
+            screensaverTimer = setTimeout(showScreensaver, IDLE_TIME_LIMIT);
+        }
+
+        function showScreensaver() {
+            const saver = document.getElementById('screensaver');
+            saver.classList.add('active');
+            startSlideShow();
+        }
+
+        function startSlideShow() {
+            const slides = document.querySelectorAll('.screensaver-slide');
+            let currentSlide = 0;
+
+            clearInterval(slideInterval);
+            slideInterval = setInterval(() => {
+                slides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide + 1) % slides.length;
+                slides[currentSlide].classList.add('active');
+            }, 4000);
+        }
+
+        window.addEventListener('mousemove', resetScreensaverTimer);
+        window.addEventListener('mousedown', resetScreensaverTimer);
+        window.addEventListener('keypress', resetScreensaverTimer);
+        window.addEventListener('touchstart', resetScreensaverTimer);
+        window.addEventListener('scroll', resetScreensaverTimer);
+
+        resetScreensaverTimer();
+    </script>
+</body>
+</html>
